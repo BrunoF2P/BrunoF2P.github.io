@@ -1,5 +1,6 @@
 ---
-import '@fontsource-variable/inter';
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/jetbrains-mono';
 import '@fontsource/instrument-serif/400.css';
 import '@fontsource/instrument-serif/400-italic.css';
 import '../styles/global.css';
@@ -13,12 +14,15 @@ interface Props {
   lang: Lang;
   title?: string;
   description?: string;
+  noNav?: boolean;
+  noFooter?: boolean;
 }
 
-const { lang, title, description } = Astro.props;
+const { lang, title, description, noNav = false, noFooter = false } = Astro.props;
 const t = ui[lang];
 const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${t.hero.role}`;
 const desc = description ?? t.hero.lead;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 ---
 
@@ -43,7 +47,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).hr
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={desc} />
 
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
     <link rel="alternate" hreflang="en" href={new URL(`/en/`, Astro.site ?? Astro.url.origin).href} />
     <link rel="alternate" hreflang="pt-br" href={new URL(`/pt-br/`, Astro.site ?? Astro.url.origin).href} />
 
@@ -67,25 +71,27 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).hr
   <body>
     <a class="skip-link btn" href="#main">Skip to content</a>
 
-    <div class="ambient" aria-hidden="true">
-      <div class="ambient__blob ambient__blob--1"></div>
-      <div class="ambient__blob ambient__blob--2"></div>
-      <div class="ambient__blob ambient__blob--3"></div>
+    <!-- Fundo global: malha aurora desfocada, vinheta e grão fosco -->
+    <div class="paint" aria-hidden="true">
+      <div class="paint__aurora" aria-hidden="true"></div>
+      <div class="paint__vignette" aria-hidden="true"></div>
     </div>
-    <div class="grain" aria-hidden="true"></div>
+    <div class="paint__grain" aria-hidden="true"></div>
+
+    <div class="scroll-progress" aria-hidden="true"></div>
 
     <div class="curtain" aria-hidden="true"><span class="curtain__word">{site.handle}</span></div>
 
     <div class="cursor" aria-hidden="true"></div>
     <div class="cursor-dot" aria-hidden="true"></div>
 
-    <Nav lang={lang} />
+    {!noNav && <Nav lang={lang} />}
 
     <main id="main">
       <slot />
     </main>
 
-    <Footer lang={lang} />
+    {!noFooter && <Footer lang={lang} />}
 
     <script>
       import '../scripts/main';
@@ -137,8 +143,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).hr
   }
 
   @media print {
-    .ambient,
-    .grain,
+    .paint,
+    .paint__grain,
     .cursor,
     .cursor-dot,
     .curtain,

@@ -8,7 +8,6 @@ export const site = {
   fullName: 'Bruno Bispo dos Santos',
   handle: 'BrunoF2P',
   email: 'brunobispo.saints@gmail.com',
-  phone: '(75) 9 9825-2863',
   location: 'Alagoinhas · Bahia · Brasil',
   city: 'Alagoinhas, Bahia',
   github: 'https://github.com/BrunoF2P',

@@ -1,93 +1,44 @@
 ---
-import { languages } from '../i18n/ui';
-
-// Sem SSR: o idioma é resolvido no cliente, reaproveitando a mesma regra do
-// servidor (resolveLang): cookie explícito tem prioridade sobre navigator.languages.
-// O cookie é gravado pelo seletor de idioma do site (src/scripts/main.ts).
-const alternates = Object.keys(languages) as Array<keyof typeof languages>;
+// Redirecionamento instantâneo para o idioma do usuário.
+// Não renderiza nenhuma tela intermediária.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bruno Bispo</title>
     <meta name="robots" content="noindex" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate" hreflang="en" href="/en/" />
-    <link rel="alternate" hreflang="pt-br" href="/pt-br/" />
-    <script>
-      import { resolveLang } from '../i18n/detect';
-
-      const stored = document.cookie.match(/(?:^|;\s*)lang=(en|pt-br)/)?.[1];
-      const lang = resolveLang(stored, navigator.languages.join(','));
-      location.replace(`/${lang}/`);
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <script is:inline define:vars={{ base }}>
+      (function () {
+        try {
+          var cookie = document.cookie.match(/(?:^|;\s*)lang=(en|pt-br)/);
+          var chosen = cookie ? cookie[1] : null;
+          if (!chosen) {
+            var navLang = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+            chosen = navLang.toLowerCase().indexOf('pt') === 0 ? 'pt-br' : 'en';
+          }
+          var prefix = base ? base : '';
+          window.location.replace(prefix + '/' + chosen + '/');
+        } catch (e) {
+          var fallback = base ? base : '';
+          window.location.replace(fallback + '/pt-br/');
+        }
+      })();
     </script>
+    <meta http-equiv="refresh" content={`0;url=${base ? base : ''}/pt-br/`} />
     <style>
-      :root {
-        color-scheme: dark;
-        --bg: #08080a;
-        --fg: #f6f6f8;
-        --dim: #8b8b95;
-        --accent: #0a84ff;
-        --accent-2: #ff375f;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
+      html, body {
+        background: #0d141d;
         margin: 0;
-        min-height: 100svh;
-        display: grid;
-        place-content: center;
-        gap: 1.25rem;
-        padding: 2rem;
-        background: var(--bg);
-        color: var(--fg);
-        font-family:
-          ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      }
-      p {
-        margin: 0;
-        color: var(--dim);
-        font-size: 0.9rem;
-      }
-      strong {
-        font-size: clamp(1.6rem, 5vw, 2.4rem);
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        background: linear-gradient(96deg, var(--accent), var(--accent-2));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-      nav {
-        display: flex;
-        gap: 0.75rem;
-        margin-top: 0.5rem;
-      }
-      a {
-        padding: 0.6rem 1.1rem;
-        border: 1px solid color-mix(in srgb, var(--fg) 15%, transparent);
-        border-radius: 999px;
-        color: var(--fg);
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-decoration: none;
-      }
-      a:hover {
-        border-color: var(--accent);
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
       }
     </style>
   </head>
-  <body>
-    <strong>Bruno Bispo</strong>
-    <p>Choose your language · Escolha seu idioma</p>
-    <nav>
-      {alternates.map((code) => (
-        <a href={`/${code}/`} data-set-lang={code}>{languages[code]}</a>
-      ))}
-    </nav>
-  </body>
+  <body></body>
 </html>

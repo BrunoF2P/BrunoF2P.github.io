@@ -1,7 +1,8 @@
 ---
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
-import { projects, experiments, categories } from '../data/projects';
+import { projects, categories } from '../data/projects';
+import { site } from '../data/site';
 import { ui, type Lang } from '../i18n/ui';
 
 interface Props {
@@ -32,537 +33,917 @@ const linkLabel: Record<string, string> = {
 };
 
 const count = (c: string) => (c === 'all' ? projects.length : projects.filter((p) => p.category === c).length);
+const openCount = projects.filter((p) => p.access === 'open').length;
 
-let featuredIndex = 0;
+/** Highlighted work gets a full cinematic row; the rest fills a bento grid. */
+const featured = projects.filter((p) => p.featured);
+const archive = projects.filter((p) => !p.featured);
+/** Bento rhythm — spans are chosen so every row closes cleanly on the 12-column grid. */
+const RHYTHM = [7, 5, 5, 7, 6, 6, 8, 4];
+const spans: number[] = [];
+let cursor = 0;
+archive.forEach((_, i) => {
+  const want = RHYTHM[i % RHYTHM.length];
+  const free = 12 - cursor;
+  let span = want;
+  if (i === archive.length - 1) span = free >= 4 ? free : 12; // closing tile fills the row
+  else if (want > free && free >= 4) span = free; // small remainder: let the tile close it
+  spans.push(span);
+  cursor = span > free ? span % 12 : (cursor + span) % 12;
+});
+const ordinal = (n: number) => String(n).padStart(2, '0');
 ---
 
 <section class="section projects" id="projects">
   <div class="container">
     <header class="projects__head">
-      <div>
+      <div class="projects__headline">
         <span class="section-label" data-reveal>{t.projects.kicker}</span>
-        <h2 class="section-title" data-reveal>{t.projects.title}</h2>
+        <h2 class="section-title" data-split>{t.projects.title}</h2>
       </div>
-      <p class="lead projects__lead" data-reveal>{t.projects.lead}</p>
+      <div class="projects__intro">
+        <p class="lead" data-reveal>{t.projects.lead}</p>
+        <ul class="projects__stats mono" data-reveal>
+          <li>
+            <b data-count={String(projects.length)}>0</b><span>{t.projects.stats.projects}</span>
+          </li>
+          <li>
+            <b data-count={String(categories.length)}>0</b><span>{t.projects.stats.areas}</span>
+          </li>
+          <li>
+            <b data-count={String(openCount)}>0</b><span>{t.projects.stats.open}</span>
+          </li>
+        </ul>
+      </div>
     </header>
 
-    <div class="filters" data-filters="#projects-grid" role="group" aria-label={t.projects.title} data-reveal>
-      <button type="button" class="filter" data-filter="all" aria-pressed="true">
-        {t.projects.filters.all}<span class="filter__count mono">{count('all')}</span>
-      </button>
-      {categories.map((c) => (
-        <button type="button" class="filter" data-filter={c} aria-pressed="false">
-          {t.projects.filters[c]}<span class="filter__count mono">{count(c)}</span>
+    <div class="projects__controls">
+      <div class="filters" data-filters="#projects-grid" role="group" aria-label={t.projects.title} data-reveal>
+        <button type="button" class="filter" data-filter="all" aria-pressed="true">
+          {t.projects.filters.all}<span class="filter__count mono">{count('all')}</span>
         </button>
-      ))}
+        {categories.map((c) => (
+          <button type="button" class="filter" data-filter={c} aria-pressed="false">
+            {t.projects.filters[c]}<span class="filter__count mono">{count(c)}</span>
+          </button>
+        ))}
+      </div>
+      <p class="projects__showing mono" aria-live="polite">
+        <b data-visible-count>{projects.length}</b>
+        <span>/ {projects.length} {t.projects.count}</span>
+      </p>
     </div>
 
     <div class="projects__grid" id="projects-grid">
-      {projects.map((p) => {
-        const featured = Boolean(p.featured);
-        const flip = featured && featuredIndex++ % 2 === 1;
-        return (
+      {
+        featured.map((p, i) => (
           <article
-            class={`card glass ${featured ? 'card--featured' : ''} ${flip ? 'card--flip' : ''}`}
+            class={`scene glass spotlight ${i % 2 === 1 ? 'scene--flip' : ''}`}
             data-reveal
             data-spotlight
             data-category={p.category}
-            style={`--c1:${p.accent[0]};--c2:${p.accent[1]}`}
+            style={`--c1:${p.accent[0]};--c2:${p.accent[1]};--spotlight-color:${p.accent[0]}`}
           >
-            <div class="card__media">
-              {p.cover ? (
-                <>
-                  <Image
-                    src={p.cover}
-                    alt={`${p.title} — project cover`}
-                    widths={[480, 820, 1200]}
-                    sizes="(max-width: 900px) 92vw, 46vw"
-                    quality={82}
-                    loading="lazy"
-                    class="card__img"
-                  />
-                  {p.gallery?.[0] && (
+            <div class="scene__visual">
+              <div class="scene__shot" data-parallax="16">
+                {p.cover ? (
+                  <>
                     <Image
-                      src={p.gallery[0]}
-                      alt={`${p.title} — second view`}
-                      widths={[480, 820, 1200]}
-                      sizes="(max-width: 900px) 92vw, 46vw"
-                      quality={82}
-                      loading="lazy"
-                      class="card__img card__img--reveal"
+                      src={p.cover}
+                      alt={`${p.title} — ${t.projects.viewLive}`}
+                      widths={[560, 900, 1400]}
+                      sizes="(max-width: 980px) 92vw, 46vw"
+                      quality={84}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      class="scene__img"
                     />
-                  )}
-                </>
-              ) : (
-                <div class="card__fallback" aria-hidden="true">
-                  <span class="card__fallback-mark">{p.title}</span>
-                  <span class="card__fallback-grid"></span>
-                </div>
-              )}
-              <span class="card__access mono">
+                    {p.gallery?.[0] && (
+                      <Image
+                        src={p.gallery[0]}
+                        alt=""
+                        widths={[560, 900, 1400]}
+                        sizes="(max-width: 980px) 92vw, 46vw"
+                        quality={84}
+                        loading="lazy"
+                        class="scene__img scene__img--alt"
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div class="art" aria-hidden="true">
+                    <span class="art__mark">{p.title}</span>
+                  </div>
+                )}
+              </div>
+              <span class="scene__ghost" aria-hidden="true">{ordinal(i + 1)}</span>
+              <span class="access mono">
                 <Icon name={accessIcon[p.access]} />
                 {accessLabel[p.access]}
               </span>
             </div>
 
-            <div class="card__body">
-              <div class="card__meta mono">
-                <span>{p.year}</span>
-                <span class="card__dot" aria-hidden="true"></span>
-                <span>{t.projects.filters[p.category]}</span>
+            <div class="scene__body">
+              <div class="scene__topline mono">
+                <span class="scene__no">{ordinal(i + 1)}</span>
+                <span class="scene__rule" aria-hidden="true" />
+                <span>
+                  {p.year} · {t.projects.filters[p.category]}
+                </span>
               </div>
 
-              <h3 class="card__title">{p.title}</h3>
-              <p class="card__tagline">{p.tagline[lang]}</p>
-              <p class="card__summary">{p.summary[lang]}</p>
+              <h3 class="scene__title">{p.title}</h3>
+              <p class="scene__tagline">{p.tagline[lang]}</p>
+              <p class="scene__summary">{p.summary[lang]}</p>
 
-              {featured && (
-                <ul class="card__highlights">
+              {p.highlights[lang].length > 0 && (
+                <ul class="scene__highlights">
                   {p.highlights[lang].map((h) => (
                     <li>
-                      <Icon name="lucide:chevron-right" />
+                      <span class="scene__bullet" aria-hidden="true" />
                       <span>{h}</span>
                     </li>
                   ))}
                 </ul>
               )}
 
-              <ul class="card__stack">
+              <ul class="scene__stack">
                 {p.stack.map((s) => (
                   <li class="chip">{s}</li>
                 ))}
               </ul>
 
-              {p.links && p.links.length > 0 ? (
-                <div class="card__links">
-                  {p.links.map((l) => (
-                    <a class="card__link" href={l.href} target="_blank" rel="noopener noreferrer">
-                      <Icon name={linkIcon[l.type]} />
+              <div class="scene__links">
+                {p.links && p.links.length > 0 ? (
+                  p.links.map((l, li) => (
+                    <a
+                      class={`btn ${li === 0 ? 'btn--solid' : ''}`}
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-magnetic="8"
+                    >
+                      <Icon name={linkIcon[l.type]} class="icon" />
                       <span>{linkLabel[l.type]}</span>
-                      <Icon name="lucide:arrow-up-right" class="card__link-arrow" />
                     </a>
-                  ))}
-                </div>
-              ) : (
-                <div class="card__links">
-                  <span class="card__link card__link--muted">
-                    <Icon name="lucide:lock" />
+                  ))
+                ) : (
+                  <span class="btn is-muted">
+                    <Icon name="lucide:lock" class="icon" />
                     <span>{t.projects.viewCase}</span>
                   </span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </article>
-        );
-      })}
+        ))
+      }
+
+      {
+        archive.map((p, i) => {
+          const span = spans[i];
+          const primary = p.links?.[0];
+          return (
+            <article
+              class={`tile glass spotlight ${span >= 7 ? 'tile--wide' : ''}`}
+              data-reveal
+              data-spotlight
+              data-tilt
+              data-category={p.category}
+              style={`--c1:${p.accent[0]};--c2:${p.accent[1]};--spotlight-color:${p.accent[0]};--span:${span}`}
+            >
+              <div class="tile__media" data-badge-zone>
+                {primary ? (
+                  <a
+                    class="tile__hit"
+                    href={primary.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${p.title} — ${linkLabel[primary.type]}`}
+                  >
+                    {p.cover ? (
+                      <>
+                        <Image
+                          src={p.cover}
+                          alt={`${p.title} — ${t.projects.viewLive}`}
+                          widths={[480, 760, 1100]}
+                          sizes="(max-width: 720px) 92vw, (max-width: 1100px) 46vw, 38vw"
+                          quality={82}
+                          loading="lazy"
+                          class="tile__img"
+                        />
+                        {p.gallery?.[0] && (
+                          <Image
+                            src={p.gallery[0]}
+                            alt=""
+                            widths={[480, 760, 1100]}
+                            sizes="(max-width: 720px) 92vw, (max-width: 1100px) 46vw, 38vw"
+                            quality={82}
+                            loading="lazy"
+                            class="tile__img tile__img--alt"
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <div class="art" aria-hidden="true">
+                        <span class="art__mark">{p.title}</span>
+                      </div>
+                    )}
+                    <span class="tile__badge">
+                      <span class="tile__badge-pill mono" data-badge-pill aria-hidden="true">
+                        {t.projects.badge}
+                        <Icon name="lucide:arrow-up-right" />
+                      </span>
+                    </span>
+                  </a>
+                ) : (
+                  <div class="tile__hit">
+                    {p.cover ? (
+                      <>
+                        <Image
+                          src={p.cover}
+                          alt={`${p.title} — ${t.projects.viewCase}`}
+                          widths={[480, 760, 1100]}
+                          sizes="(max-width: 720px) 92vw, (max-width: 1100px) 46vw, 38vw"
+                          quality={82}
+                          loading="lazy"
+                          class="tile__img"
+                        />
+                        {p.gallery?.[0] && (
+                          <Image
+                            src={p.gallery[0]}
+                            alt=""
+                            widths={[480, 760, 1100]}
+                            sizes="(max-width: 720px) 92vw, (max-width: 1100px) 46vw, 38vw"
+                            quality={82}
+                            loading="lazy"
+                            class="tile__img tile__img--alt"
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <div class="art" aria-hidden="true">
+                        <span class="art__mark">{p.title}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <span class="access mono">
+                  <Icon name={accessIcon[p.access]} />
+                  {accessLabel[p.access]}
+                </span>
+              </div>
+
+              <div class="tile__body">
+                <span class="tile__meta mono">
+                  {ordinal(featured.length + i + 1)} · {p.year} · {t.projects.filters[p.category]}
+                </span>
+                <h3 class="tile__title">{p.title}</h3>
+                <p class="tile__tagline">{p.tagline[lang]}</p>
+                <ul class="tile__stack">
+                  {p.stack.slice(0, 4).map((s) => (
+                    <li class="chip">{s}</li>
+                  ))}
+                </ul>
+                <div class="tile__links">
+                  {p.links && p.links.length > 0 ? (
+                    p.links.map((l) => (
+                      <a class="tile__link" href={l.href} target="_blank" rel="noopener noreferrer">
+                        <Icon name={linkIcon[l.type]} />
+                        <span>{linkLabel[l.type]}</span>
+                      </a>
+                    ))
+                  ) : (
+                    <span class="tile__link tile__link--muted">
+                      <Icon name="lucide:lock" />
+                      <span>{t.projects.viewCase}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })
+      }
     </div>
 
-    <div class="experiments" data-reveal>
-      <h3 class="experiments__title">{t.projects.more}</h3>
-      <ul class="experiments__list">
-        {experiments.map((e) => (
-          <li>
-            {e.href ? (
-              <a href={e.href} target="_blank" rel="noopener noreferrer">
-                <span class="experiments__name">{e.title}</span>
-                <span class="experiments__note">{e.note[lang]}</span>
-                <Icon name="lucide:arrow-up-right" />
-              </a>
-            ) : (
-              <span class="experiments__row">
-                <span class="experiments__name">{e.title}</span>
-                <span class="experiments__note">{e.note[lang]}</span>
-                <Icon name="lucide:lock" />
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <aside class="projects__cta glass spotlight" data-reveal data-spotlight style="--spotlight-color:var(--accent-2)">
+      <div class="projects__cta-text">
+        <span class="section-label">{t.projects.cta.label}</span>
+        <p class="projects__cta-title">{t.projects.cta.title}</p>
+      </div>
+      <a class="btn btn--solid" href={site.github} target="_blank" rel="noopener noreferrer" data-magnetic="10">
+        <Icon name="simple-icons:github" class="icon" />
+        <span>{t.projects.cta.action}</span>
+      </a>
+    </aside>
   </div>
 </section>
 
 <style>
+  /* ---------- Header ---------- */
   .projects__head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 1.5rem 3rem;
+    gap: 1.6rem 3rem;
     align-items: end;
-    margin-bottom: 1.8rem;
+    margin-bottom: clamp(1.6rem, 3vw, 2.4rem);
   }
-  .projects__lead {
+  .projects__intro {
+    display: grid;
+    gap: 1.1rem;
+    justify-items: end;
+  }
+  .projects__intro .lead {
     margin-top: 0;
-    justify-self: end;
     max-width: 46ch;
     font-size: var(--step-0);
   }
-
-  .filters {
+  .projects__stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1.6rem;
-    border-bottom: 1px solid var(--line-soft);
-  }
-  .filter {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--glass);
-    color: var(--text-2);
-    font-size: var(--step--1);
-    font-weight: 550;
-    transition: color 0.3s var(--ease), border-color 0.3s var(--ease), background 0.3s var(--ease);
-  }
-  .filter:hover {
-    color: var(--text);
-    border-color: var(--ring);
-  }
-  .filter[aria-pressed='true'] {
-    color: #fff;
-    border-color: transparent;
-    background: var(--grad);
-  }
-  .filter__count {
-    font-size: 0.72rem;
-    opacity: 0.65;
-  }
-
-  .projects__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.1rem;
-  }
-
-  .card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    gap: 0.4rem 1.7rem;
+    list-style: none;
+    margin: 0;
     padding: 0;
-    border-radius: var(--radius);
-    transition: transform 0.55s var(--ease), border-color 0.45s var(--ease);
   }
-  .card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.45s var(--ease);
-    background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--c1) 22%, transparent), transparent 62%);
-    z-index: 3;
-  }
-  .card:hover {
-    transform: translateY(-4px);
-    border-color: color-mix(in srgb, var(--c1) 40%, var(--line));
-  }
-  .card:hover::after {
-    opacity: 1;
-  }
-  .card.is-hidden {
-    display: none;
-  }
-
-  .card--featured {
-    grid-column: 1 / -1;
-    flex-direction: row;
-  }
-  .card--featured .card__media {
-    flex: 1 1 50%;
-    aspect-ratio: auto;
-    min-height: 100%;
-  }
-  .card--featured .card__body {
-    flex: 1 1 48%;
-    padding: clamp(1.4rem, 3vw, 2.6rem);
-  }
-  .card--featured.card--flip {
-    flex-direction: row-reverse;
-  }
-
-  .card__media {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    background:
-      radial-gradient(120% 120% at 18% 0%, color-mix(in srgb, var(--c1) 24%, transparent), transparent 58%),
-      radial-gradient(120% 120% at 85% 100%, color-mix(in srgb, var(--c2) 22%, transparent), transparent 60%),
-      var(--elev);
-  }
-  .card__img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: clamp(0.9rem, 3vw, 1.8rem);
-    transition: transform 0.8s var(--ease), filter 0.5s var(--ease);
-  }
-  .card--featured .card__img {
-    padding: clamp(1.1rem, 2.8vw, 2.4rem);
-  }
-  .card:hover .card__img {
-    transform: scale(1.045);
-  }
-  .card__img--reveal {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transform: none;
-    transition: opacity 0.55s var(--ease);
-  }
-  .card:hover .card__img--reveal {
-    opacity: 1;
-    transform: none;
-  }
-  @media (hover: none) {
-    .card__img--reveal {
-      display: none;
-    }
-  }
-  .card__fallback {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: grid;
-    place-items: center;
-    background: radial-gradient(circle at 25% 20%, color-mix(in srgb, var(--c1) 55%, transparent), transparent 60%),
-      radial-gradient(circle at 80% 80%, color-mix(in srgb, var(--c2) 55%, transparent), transparent 60%), var(--elev);
-    overflow: hidden;
-  }
-  .card__fallback-grid {
-    position: absolute;
-    inset: 0;
-    background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
-    background-size: 42px 42px;
-    opacity: 0.7;
-  }
-  .card__fallback-mark {
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: var(--step-3);
-    color: var(--text);
-    text-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
-    transition: transform 0.7s var(--ease);
-  }
-  .card:hover .card__fallback-mark {
-    transform: scale(1.04);
-  }
-
-  .card__access {
-    position: absolute;
-    left: 0.85rem;
-    top: 0.85rem;
-    z-index: 2;
+  .projects__stats li {
     display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.65rem;
-    border-radius: 999px;
-    background: var(--glass-strong);
-    border: 1px solid var(--line);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-2);
+    align-items: baseline;
+    gap: 0.45rem;
   }
-  .card__access :global(svg) {
-    width: 0.8rem;
-    height: 0.8rem;
+  .projects__stats b {
+    font-family: var(--font-sans);
+    font-size: 1.5em;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
   }
-
-  .card__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    padding: 1.3rem 1.35rem 1.5rem;
-    position: relative;
-    z-index: 2;
-  }
-  .card__meta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.7rem;
+  .projects__stats span {
+    font-size: 0.66rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-3);
   }
-  .card__dot {
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: var(--text-3);
+
+  /* ---------- Floating filter bar ---------- */
+  .projects__controls {
+    position: sticky;
+    top: 4.4rem;
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1.25rem;
+    margin-bottom: clamp(1.4rem, 3vw, 2.2rem);
+    padding: 0.55rem 0.65rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-soft);
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: 0 18px 40px -30px rgba(0, 0, 0, 0.75);
   }
-  .card__title {
-    font-size: var(--step-2);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-    transition: color 0.4s var(--ease);
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
   }
-  .card:hover .card__title {
-    color: color-mix(in srgb, var(--c1) 70%, var(--text));
+  .filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.42rem 0.85rem;
+    border-radius: var(--radius-xs);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-2);
+    font-size: var(--step--1);
+    font-weight: 550;
+    transition:
+      color 0.3s var(--ease),
+      background 0.3s var(--ease),
+      border-color 0.3s var(--ease);
   }
-  .card--featured .card__title {
+  .filter:hover {
+    color: var(--text);
+    background: var(--elev);
+  }
+  .filter[aria-pressed='true'] {
+    color: #fff;
+    background: var(--grad);
+  }
+  .filter__count {
+    font-size: 0.7rem;
+    opacity: 0.6;
+  }
+  .projects__showing {
+    margin: 0;
+    padding-right: 0.5rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .projects__showing b {
+    font-size: 1.3em;
+    color: var(--text);
+  }
+
+  /* ---------- Grid ---------- */
+  .projects__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: clamp(0.85rem, 1.4vw, 1.25rem);
+  }
+  /* A filtered subset drops the mosaic for a calm, uniform rhythm. */
+  .projects__grid.is-filtered .tile {
+    grid-column: span 6;
+  }
+  .scene.is-hidden,
+  .tile.is-hidden {
+    display: none;
+  }
+
+  /* ---------- Featured scenes ---------- */
+  .scene {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+    align-items: stretch;
+    overflow: hidden;
+    border-radius: calc(var(--radius) * 1.4);
+    padding: 0;
+    box-shadow: var(--glow);
+    transition: border-color 0.5s var(--ease);
+  }
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--c1) 72%, transparent),
+      transparent 44%,
+      color-mix(in srgb, var(--c2) 62%, transparent)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.4;
+    transition: opacity 0.5s var(--ease);
+    pointer-events: none;
+  }
+  .scene:hover::before {
+    opacity: 1;
+  }
+  .scene--flip .scene__visual {
+    order: 2;
+  }
+  .scene--flip .scene__body {
+    order: 1;
+  }
+
+  .scene__visual {
+    position: relative;
+    overflow: hidden;
+    min-height: clamp(17rem, 34vw, 30rem);
+    background:
+      radial-gradient(120% 120% at 18% 6%, color-mix(in srgb, var(--c1) 26%, transparent), transparent 58%),
+      radial-gradient(120% 120% at 86% 100%, color-mix(in srgb, var(--c2) 24%, transparent), transparent 62%),
+      var(--elev);
+  }
+  .scene__shot {
+    position: absolute;
+    inset: -8% 0;
+  }
+  .scene__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: clamp(1.1rem, 3vw, 2.4rem);
+    transition:
+      transform 0.9s var(--ease),
+      opacity 0.6s var(--ease);
+  }
+  .scene__img--alt {
+    opacity: 0;
+  }
+  .scene:hover .scene__img {
+    transform: scale(1.045);
+  }
+  .scene:hover .scene__img--alt {
+    opacity: 1;
+  }
+  .scene__ghost {
+    position: absolute;
+    left: clamp(0.6rem, 2vw, 1.6rem);
+    bottom: clamp(0.55rem, 1.6vw, 1.15rem);
+    z-index: 2;
+    font-family: var(--font-serif);
+    font-size: clamp(4.2rem, 11vw, 9rem);
+    line-height: 0.78;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--c1) 62%, transparent);
+    opacity: 0.55;
+    pointer-events: none;
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.8s var(--ease);
+  }
+  .scene:hover .scene__ghost {
+    opacity: 0.95;
+    transform: translateY(-8px);
+  }
+
+  .scene__body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: clamp(1.3rem, 2.6vw, 2.6rem);
+  }
+  .scene__topline {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .scene__no {
+    color: color-mix(in srgb, var(--c1) 78%, var(--text));
+  }
+  .scene__rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--line), transparent);
+  }
+  .scene__title {
     font-size: var(--step-3);
+    letter-spacing: -0.035em;
+    line-height: 1.02;
   }
-  .card__tagline {
+  .scene__tagline {
     font-family: var(--font-serif);
     font-style: italic;
     font-size: var(--step-1);
     color: var(--text);
-    margin-top: -0.1rem;
+    max-width: 40ch;
   }
-  .card__summary {
+  .scene__summary {
     font-size: var(--step--1);
     color: var(--text-2);
-    line-height: 1.62;
-    max-width: 62ch;
+    line-height: 1.68;
+    max-width: 58ch;
   }
-
-  .card__highlights {
+  .scene__highlights {
     list-style: none;
-    margin: 0.5rem 0 0.2rem;
+    margin: 0.2rem 0 0;
     padding: 0;
     display: grid;
-    gap: 0.4rem;
+    gap: 0.45rem;
   }
-  .card__highlights li {
+  .scene__highlights li {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
     align-items: flex-start;
     font-size: var(--step--1);
     color: var(--text-2);
     line-height: 1.5;
   }
-  .card__highlights :global(svg) {
-    width: 0.95rem;
-    height: 0.95rem;
-    margin-top: 0.28rem;
+  .scene__bullet {
+    width: 6px;
+    height: 6px;
+    margin-top: 0.5rem;
     flex-shrink: 0;
-    color: var(--c1);
+    border-radius: 2px;
+    background: var(--grad);
   }
-
-  .card__stack {
+  .scene__stack {
     list-style: none;
-    margin: 0.6rem 0 0;
+    margin: 0.3rem 0 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
   }
-
-  .card__links {
+  .scene__links {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
-    margin-top: 0.9rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid var(--line-soft);
+    margin-top: auto;
+    padding-top: 1.1rem;
   }
-  .card__link {
+  .scene__links .btn {
+    padding: 0.6rem 1.1rem;
+    font-size: var(--step--1);
+  }
+  .scene__links .btn .icon {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+  .is-muted {
+    opacity: 0.6;
+  }
+
+  /* ---------- Archive tiles ---------- */
+  .tile {
+    grid-column: span var(--span, 6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    transition: border-color 0.45s var(--ease);
+  }
+  .tile:hover {
+    border-color: color-mix(in srgb, var(--c1) 42%, var(--line));
+  }
+  .tile--wide {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .tile--wide .tile__media {
+    flex: 1 1 46%;
+    aspect-ratio: auto;
+    min-height: clamp(12rem, 20vw, 17rem);
+  }
+  .tile--wide .tile__body {
+    flex: 1 1 54%;
+  }
+
+  .tile__media {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background:
+      radial-gradient(110% 110% at 16% 4%, color-mix(in srgb, var(--c1) 22%, transparent), transparent 60%),
+      radial-gradient(110% 110% at 88% 100%, color-mix(in srgb, var(--c2) 20%, transparent), transparent 62%),
+      var(--elev);
+  }
+  .tile__hit {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  .tile__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: clamp(0.9rem, 2.6vw, 1.7rem);
+    transition:
+      transform 0.85s var(--ease),
+      opacity 0.55s var(--ease);
+  }
+  .tile__img--alt {
+    opacity: 0;
+  }
+  .tile:hover .tile__img {
+    transform: scale(1.05);
+  }
+  .tile:hover .tile__img--alt {
+    opacity: 1;
+  }
+
+  .tile__badge {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .tile__badge-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.3rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: var(--radius-xs);
+    background: color-mix(in srgb, var(--c1) 72%, #10151d);
+    color: #fff;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transform: scale(0.4);
+    box-shadow: 0 12px 30px -14px rgba(0, 0, 0, 0.75);
+  }
+  .tile__badge-pill :global(svg) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+  /* Touch / reduced-motion fallback: the pill is centred and shown on hover or focus. */
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    .tile__badge {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .tile:hover .tile__badge-pill,
+    .tile__hit:focus-visible .tile__badge-pill {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .tile__body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.1rem 1.2rem 1.25rem;
+  }
+  .tile__meta {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .tile__title {
+    font-size: var(--step-1);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    transition: color 0.4s var(--ease);
+  }
+  .tile:hover .tile__title {
+    color: color-mix(in srgb, var(--c1) 72%, var(--text));
+  }
+  .tile__tagline {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--step-0);
+    color: var(--text-2);
+  }
+  .tile__stack {
+    list-style: none;
+    margin: 0.2rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .tile__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: auto;
+    padding-top: 0.9rem;
+  }
+  .tile__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: var(--step--1);
     font-weight: 550;
     color: var(--text-2);
     transition: color 0.3s var(--ease);
   }
-  .card__link :global(svg) {
-    width: 0.95rem;
-    height: 0.95rem;
-  }
-  .card__link:hover {
-    color: var(--text);
-  }
-  .card__link-arrow {
-    transition: transform 0.35s var(--ease);
-  }
-  .card__link:hover .card__link-arrow {
-    transform: translate(2px, -2px);
-  }
-  .card__link--muted {
-    opacity: 0.6;
-  }
-
-  .experiments {
-    margin-top: clamp(2.5rem, 6vw, 4rem);
-    padding-top: 1.8rem;
-    border-top: 1px solid var(--line-soft);
-  }
-  .experiments__title {
-    font-size: var(--step--1);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-3);
-    margin-bottom: 1rem;
-  }
-  .experiments__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0.4rem 1.5rem;
-  }
-  .experiments__list a,
-  .experiments__row {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px dashed var(--line-soft);
-    transition: color 0.3s var(--ease);
-  }
-  .experiments__name {
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .experiments__note {
-    font-size: var(--step--1);
-    color: var(--text-3);
-    flex: 1;
-  }
-  .experiments__list :global(svg) {
+  .tile__link :global(svg) {
     width: 0.9rem;
     height: 0.9rem;
-    color: var(--text-3);
-    flex-shrink: 0;
-    transition: transform 0.3s var(--ease);
   }
-  .experiments__list a:hover :global(svg) {
-    transform: translate(2px, -2px);
-    color: var(--accent);
+  .tile__link:hover {
+    color: var(--text);
+  }
+  .tile__link--muted {
+    opacity: 0.55;
   }
 
-  @media (max-width: 900px) {
+  /* ---------- Shared generated art (projects without screenshots) ---------- */
+  .art {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    background:
+      radial-gradient(80% 80% at 22% 18%, color-mix(in srgb, var(--c1) 34%, transparent), transparent 62%),
+      radial-gradient(80% 80% at 80% 82%, color-mix(in srgb, var(--c2) 30%, transparent), transparent 64%);
+  }
+  .art__mark {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(1.35rem, 3vw, 2.3rem);
+    line-height: 1.15;
+    text-align: center;
+    max-width: 92%;
+    color: var(--text);
+    text-shadow: 0 6px 26px rgba(0, 0, 0, 0.35);
+    transition: transform 0.8s var(--ease);
+  }
+  .scene:hover .art__mark,
+  .tile:hover .art__mark {
+    transform: scale(1.04);
+  }
+
+  .access {
+    position: absolute;
+    left: 0.8rem;
+    top: 0.8rem;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-xs);
+    background: var(--glass-strong);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    font-size: 0.64rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .access :global(svg) {
+    width: 0.78rem;
+    height: 0.78rem;
+  }
+
+  /* ---------- Closing call to action ---------- */
+  .projects__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    margin-top: clamp(1.6rem, 3.5vw, 2.6rem);
+    padding: clamp(1.4rem, 3vw, 2.2rem) clamp(1.4rem, 3vw, 2.4rem);
+    border-radius: calc(var(--radius) * 1.4);
+  }
+  .projects__cta-text {
+    display: grid;
+    gap: 0.55rem;
+  }
+  .projects__cta-title {
+    margin: 0;
+    font-size: var(--step-2);
+    letter-spacing: -0.03em;
+    line-height: 1.16;
+    max-width: 34ch;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 980px) {
     .projects__head {
       grid-template-columns: 1fr;
     }
-    .projects__lead {
-      justify-self: start;
+    .projects__intro {
+      justify-items: start;
+    }
+    .scene {
+      grid-template-columns: 1fr;
+    }
+    .scene--flip .scene__visual,
+    .scene--flip .scene__body {
+      order: 0;
+    }
+    .scene__visual {
+      min-height: 0;
+      aspect-ratio: 16 / 10;
+    }
+  }
+  @media (max-width: 720px) {
+    .projects__controls {
+      position: static;
     }
     .projects__grid {
       grid-template-columns: 1fr;
     }
-    .card--featured,
-    .card--featured.card--flip {
+    .tile,
+    .projects__grid.is-filtered .tile {
+      grid-column: 1 / -1;
+    }
+    .tile--wide {
       flex-direction: column;
     }
-    .card--featured .card__media {
+    .tile--wide .tile__media {
       aspect-ratio: 16 / 10;
-      flex: none;
       min-height: 0;
+    }
+  }
+  @media (min-width: 1500px) {
+    .projects__head {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    }
+    .projects__grid.is-filtered .tile {
+      grid-column: span 4;
     }
   }
 </style>

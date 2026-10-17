@@ -8,8 +8,15 @@ import quijavaMenu from '../assets/projects/quijava/menu.png';
 import quijavaGame from '../assets/projects/quijava/jogo.png';
 import aranduChart from '../assets/projects/arandu/chart.png';
 import aranduMeme from '../assets/projects/arandu/meme.jpg';
+import aranduHome from '../assets/projects/arandu/arandu-home.png';
+import aranduPlayground from '../assets/projects/arandu/arandu-playground.png';
+import thesisCover from '../assets/projects/arandu/thesis-cover.png';
 import rStats from '../assets/projects/rprojetos/estatisticas.png';
 import rCauses from '../assets/projects/rprojetos/causas.png';
+import mousseeCover from '../assets/projects/moussee/app-cover.png';
+import mousseeMenu from '../assets/projects/moussee/menu.png';
+import mousseeStudio from '../assets/projects/moussee/studio.png';
+import fluxblocksGame from '../assets/projects/fluxblocks/game.png';
 
 export type Category = 'desktop' | 'web' | 'systems' | 'data' | 'games' | 'research';
 export type Access = 'open' | 'private' | 'research';
@@ -40,6 +47,44 @@ export type Project = {
 export const categories: Category[] = ['desktop', 'web', 'systems', 'data', 'games', 'research'];
 
 export const projects: Project[] = [
+  {
+    id: 'arandu-lang',
+    title: 'Arandu',
+    category: 'systems',
+    year: '2026',
+    access: 'open',
+    featured: true,
+    accent: ['#e65c00', '#ff8a3d'],
+    tagline: {
+      en: 'A modern ownership-based systems language.',
+      'pt-br': 'Linguagem de sistemas simples, segura e nativa.',
+    },
+    summary: {
+      en: 'I created the Arandu programming language and its native Rust compiler, built around static ownership verification, escape analysis and Cranelift code generation — with an in-browser WebAssembly playground and full documentation at arandu-lang.dev.',
+      'pt-br': 'Criei a linguagem de programação Arandu e seu compilador nativo em Rust, construído sobre verificação estática de posse, análise de escape e geração de código via Cranelift — com playground interativo em WebAssembly e documentação completa em arandu-lang.dev.',
+    },
+    highlights: {
+      en: [
+        'Creator and author of the Arandu programming language and compiler in Rust',
+        'Official platform with docs, specifications and in-browser WASM playground at arandu-lang.dev',
+        'Static affine ownership semantics, escape analysis and memory safety guarantees',
+        'Automated test suites and empirical performance benchmarks against C and Rust',
+      ],
+      'pt-br': [
+        'Criador e mantenedor da linguagem de programação Arandu e compilador em Rust',
+        'Plataforma oficial com documentação completa e playground interativo em arandu-lang.dev',
+        'Verificação estática de posse (ownership), análise de escape e geração nativa via Cranelift',
+        'Suíte de testes, diagnósticos detalhados e benchmarks empíricos com máxima paridade contra C e Rust',
+      ],
+    },
+    stack: ['Rust', 'Compilers', 'Cranelift', 'WebAssembly', 'Astro', 'TypeScript'],
+    cover: aranduHome,
+    gallery: [aranduPlayground],
+    links: [
+      { type: 'live', href: 'https://arandu-lang.dev' },
+      { type: 'code', href: 'https://github.com/BrunoF2P/Arandu-Lang' },
+    ],
+  },
   {
     id: 'imglyze',
     title: 'Imglyze',
@@ -110,68 +155,39 @@ export const projects: Project[] = [
     links: [{ type: 'code', href: 'https://github.com/BrunoF2P/HyCore-Launcher' }],
   },
   {
-    id: 'apito',
-    title: 'Apito',
-    category: 'systems',
+    id: 'moussee',
+    title: 'Moussee.me',
+    category: 'web',
     year: '2026',
-    access: 'private',
+    access: 'open',
     featured: true,
-    accent: ['#32d74b', '#0a84ff'],
+    accent: ['#ff375f', '#ff9f0a'],
     tagline: {
-      en: 'A football simulation engine, in Rust.',
-      'pt-br': 'Uma engine de simulação de futebol, em Rust.',
+      en: 'Identity and links for creators, at near-zero cost.',
+      'pt-br': 'Identidade e links para criadores, a custo quase zero.',
     },
     summary: {
-      en: 'A Football-Manager-style simulation engine in Rust that powers the Unity game "Manager\u2019s Legacy". Five acyclic layers, a gRPC/Protobuf protocol and 23 specified modules.',
-      'pt-br': 'Engine de simulação estilo Football Manager em Rust que alimenta o jogo "Manager\u2019s Legacy", em Unity. Cinco camadas acíclicas, protocolo gRPC/Protobuf e 23 módulos especificados.',
+      en: 'A high-performance link-in-bio platform with a Cloudflare-first architecture and full domain decoupling — a monorepo spanning a SvelteKit studio and an edge gateway.',
+      'pt-br': 'Plataforma link-in-bio de alto desempenho com arquitetura Cloudflare-first e desacoplamento total de domínio — monorepo com estúdio em SvelteKit e gateway de borda.',
     },
     highlights: {
       en: [
-        'Rust engine with a strict five-layer acyclic architecture',
-        'gRPC/Protobuf contract between engine and the Unity (URP 2D) client',
-        '23 documented modules: scope, business rules, data schema, rollout',
-        'New-game wizard, coach creation, licensing and roleplay flows',
+        'SvelteKit 5 admin panel with a visual WYSIWYG page editor',
+        'Cloudflare Worker gateway for edge routing and custom domains',
+        'Deterministic static renderer with critical CSS, plus a canonical theme catalog',
+        'Zod data contracts, D1/R2 storage, CDN purge and analytics',
       ],
       'pt-br': [
-        'Engine em Rust com arquitetura estrita de cinco camadas acíclicas',
-        'Contrato gRPC/Protobuf entre a engine e o cliente Unity (URP 2D)',
-        '23 módulos documentados: escopo, regras de negócio, esquema de dados e plano',
-        'Wizard de novo jogo, criação de treinador, licenciamento e fluxos de roleplay',
+        'Painel administrativo em SvelteKit 5 com editor WYSIWYG',
+        'Gateway em Cloudflare Worker para roteamento de borda e domínios próprios',
+        'Motor determinístico de renderização estática com CSS crítico e catálogo de temas',
+        'Contratos de dados em Zod, armazenamento D1/R2, purge de CDN e analytics',
       ],
     },
-    stack: ['Rust', 'gRPC', 'Protobuf', 'Unity', 'C#'],
-  },
-  {
-    id: 'nanquink',
-    title: 'Nanquink',
-    category: 'desktop',
-    year: '2026',
-    access: 'private',
-    featured: true,
-    accent: ['#ff9f0a', '#ff375f'],
-    tagline: {
-      en: 'Write books, together. Offline first.',
-      'pt-br': 'Escreva livros, junto. Offline primeiro.',
-    },
-    summary: {
-      en: 'A book-writing app with local-first collaboration. It blends Scrivener\u2019s spatial organization, Google Docs\u2019 transparent sync and background intelligence — all offline and open (GPL-2.0).',
-      'pt-br': 'Software de escrita de livros com colaboração local-first. Combina a organização espacial do Scrivener, a sincronização transparente do Google Docs e inteligência de fundo — tudo offline e aberto (GPL-2.0).',
-    },
-    highlights: {
-      en: [
-        'Local-first with CRDT (Loro) — the data lives on your disk, the cloud is a replica',
-        'Narrative-oriented document model: scenes, chapters, story bibles',
-        'Rust + Tauri 2 core, React 19 + Jotai + Tailwind v4 shell',
-        'SQLite + FTS5 storage and a planned Axum/Tokio sync relay',
-      ],
-      'pt-br': [
-        'Local-first com CRDT (Loro) — o dado mora no seu disco, a nuvem é réplica',
-        'Modelo de documento pensado para narrativa: cenas, capítulos, fichas',
-        'Núcleo Rust + Tauri 2, casca em React 19 + Jotai + Tailwind v4',
-        'Persistência em SQLite + FTS5 e relay de sync planejado em Axum/Tokio',
-      ],
-    },
-    stack: ['Rust', 'Tauri 2', 'React 19', 'TypeScript', 'Loro CRDT', 'SQLite'],
+    stack: ['SvelteKit', 'TypeScript', 'Cloudflare Workers', 'D1', 'R2', 'Zod'],
+    cover: mousseeCover,
+    gallery: [mousseeMenu, mousseeStudio],
+    links: [{ type: 'live', href: 'https://app.moussee.me/' }],
   },
   {
     id: 'quijava',
@@ -209,100 +225,6 @@ export const projects: Project[] = [
     links: [{ type: 'code', href: 'https://github.com/BrunoF2P/quijava' }],
   },
   {
-    id: 'moussee',
-    title: 'Moussee.me',
-    category: 'web',
-    year: '2026',
-    access: 'private',
-    featured: true,
-    accent: ['#ff375f', '#ff9f0a'],
-    tagline: {
-      en: 'Identity and links for creators, at near-zero cost.',
-      'pt-br': 'Identidade e links para criadores, a custo quase zero.',
-    },
-    summary: {
-      en: 'A high-performance link-in-bio platform with a Cloudflare-first architecture and full domain decoupling — a monorepo spanning a SvelteKit studio and an edge gateway.',
-      'pt-br': 'Plataforma link-in-bio de alto desempenho com arquitetura Cloudflare-first e desacoplamento total de domínio — monorepo com estúdio em SvelteKit e gateway de borda.',
-    },
-    highlights: {
-      en: [
-        'SvelteKit 5 admin panel with a WYSIWYG page editor',
-        'Cloudflare Worker gateway for edge routing and custom domains',
-        'Deterministic static renderer with critical CSS, plus a canonical theme catalog',
-        'Zod data contracts, D1/R2 storage, CDN purge and analytics',
-      ],
-      'pt-br': [
-        'Painel administrativo em SvelteKit 5 com editor WYSIWYG',
-        'Gateway em Cloudflare Worker para roteamento de borda e domínios próprios',
-        'Motor determinístico de renderização estática com CSS crítico e catálogo de temas',
-        'Contratos de dados em Zod, armazenamento D1/R2, purge de CDN e analytics',
-      ],
-    },
-    stack: ['SvelteKit', 'TypeScript', 'Cloudflare Workers', 'D1', 'R2', 'Zod'],
-  },
-  {
-    id: 'urdimbre',
-    title: 'Urdimbre',
-    category: 'systems',
-    year: '2026',
-    access: 'private',
-    accent: ['#64d2ff', '#5e5ce6'],
-    tagline: {
-      en: 'An authoritative multiplayer game backend.',
-      'pt-br': 'Um backend autoritativo de jogo multiplayer.',
-    },
-    summary: {
-      en: 'An authoritative monorepo for a card-driven multiplayer game: Unity client, shared Protobuf contracts, a Go platform API, a .NET authoritative match server and Rust tuning algorithms.',
-      'pt-br': 'Monorepo autoritativo de um jogo multiplayer de cartas: cliente Unity, contratos Protobuf compartilhados, API de plataforma em Go, servidor autoritativo de partida em .NET e algoritmos de balanceamento em Rust.',
-    },
-    highlights: {
-      en: [
-        'Authoritative match state across .NET, Go and Rust services',
-        'Shared Protobuf contract as the single source of truth',
-        'Docker-backed private session allocator',
-        'PostgreSQL migrations and a reproducible local Compose environment',
-      ],
-      'pt-br': [
-        'Estado de partida autoritativo entre serviços .NET, Go e Rust',
-        'Contrato Protobuf compartilhado como fonte única de verdade',
-        'Alocador de sessões privado baseado em Docker',
-        'Migrações PostgreSQL e ambiente local reproduzível via Compose',
-      ],
-    },
-    stack: ['Go', '.NET', 'Rust', 'Unity', 'Protobuf', 'PostgreSQL', 'Docker'],
-  },
-  {
-    id: 'pncp',
-    title: 'PNCP Caçador',
-    category: 'data',
-    year: '2026',
-    access: 'private',
-    accent: ['#ffd60a', '#ff9f0a'],
-    tagline: {
-      en: 'Hunting overpricing in public procurement.',
-      'pt-br': 'Caçando sobrepreço em compras públicas.',
-    },
-    summary: {
-      en: 'A tool that explores Brazil\u2019s public procurement portal and flags outliers, with a Next.js dashboard for suppliers, geospatial views and price anomalies over a Python data pipeline.',
-      'pt-br': 'Ferramenta que explora o Portal Nacional de Contratações Públicas e sinaliza anomalias, com dashboard em Next.js para fornecedores, visão geográfica e outliers de preço sobre um pipeline de dados em Python.',
-    },
-    highlights: {
-      en: [
-        'Ingests and normalizes public procurement data',
-        'Outlier and overpricing detection across items and suppliers',
-        'Dashboard with supplier, flag and map views',
-        'Python pipeline feeding a Next.js app',
-      ],
-      'pt-br': [
-        'Ingere e normaliza dados de contratações públicas',
-        'Detecção de outliers e sobrepreço por item e fornecedor',
-        'Dashboard com visões de fornecedores, sinalizações e mapa',
-        'Pipeline em Python alimentando uma aplicação Next.js',
-      ],
-    },
-    stack: ['Next.js', 'Python', 'JavaScript'],
-  },
-  {
     id: 'tcc',
     title: 'Thesis — Generational References',
     category: 'research',
@@ -314,8 +236,8 @@ export const projects: Project[] = [
       'pt-br': 'Uma alternativa à rejeição estrita em linguagens com posse.',
     },
     summary: {
-      en: 'Compiler-engineering research evaluating generational references as an automatic fallback when an escape analysis cannot prove a lifetime at compile time — measured on the Arandu compiler.',
-      'pt-br': 'Pesquisa em engenharia de compiladores avaliando referências geracionais como fallback automático quando a análise de escape não consegue provar um tempo de vida em compilação — medida no compilador Arandu.',
+      en: 'My thesis research in compiler engineering: it evaluates generational references as an automatic fallback when escape analysis cannot prove a lifetime at compile time — measured directly on the Arandu compiler.',
+      'pt-br': 'Minha pesquisa de TCC em engenharia de compiladores: avalia referências geracionais como fallback automático quando a análise de escape não consegue provar um tempo de vida em compilação — medida diretamente no compilador Arandu.',
     },
     highlights: {
       en: [
@@ -332,6 +254,8 @@ export const projects: Project[] = [
       ],
     },
     stack: ['Rust', 'Compilers', 'Arandu'],
+    cover: thesisCover,
+    gallery: [aranduChart],
   },
   {
     id: 'fluxblocks',
@@ -363,6 +287,7 @@ export const projects: Project[] = [
       ],
     },
     stack: ['Java', 'FXGL', 'JavaFX', 'Gradle'],
+    cover: fluxblocksGame,
     links: [{ type: 'code', href: 'https://github.com/BrunoF2P/FluxBlocks' }],
   },
   {
@@ -377,21 +302,21 @@ export const projects: Project[] = [
       'pt-br': 'Uma API REST de cinema, com demo ao vivo.',
     },
     summary: {
-      en: 'A RESTful API for managing movies, showtimes and ticket reservations, built with Node, Express and PostgreSQL via Prisma, with AI-assisted features and observability.',
-      'pt-br': 'API RESTful para gerenciar filmes, sessões e reservas de ingressos, feita com Node, Express e PostgreSQL via Prisma, com recursos assistidos por IA e observabilidade.',
+      en: 'A RESTful API for managing movies, showtimes and ticket reservations, built with Node, Express and PostgreSQL via Prisma, featuring relational data modeling, OpenAPI docs and full observability.',
+      'pt-br': 'API RESTful para gerenciar filmes, sessões e reservas de ingressos, feita com Node, Express e PostgreSQL via Prisma, com modelagem relacional de dados, especificação OpenAPI e observabilidade.',
     },
     highlights: {
       en: [
-        'Full CRUD for movies, sessions and reservations',
-        'Prisma + PostgreSQL data layer with authentication',
-        'Gemini integration and New Relic monitoring',
-        'Documented with Swagger and deployed to Koyeb',
+        'Full CRUD for movies, sessions and reservations with JWT auth',
+        'Prisma + PostgreSQL data layer with foreign keys and cascade rules',
+        'Application performance monitoring with New Relic telemetry',
+        'Documented with Swagger/OpenAPI and deployed to Koyeb',
       ],
       'pt-br': [
-        'CRUD completo de filmes, sessões e reservas',
-        'Camada de dados em Prisma + PostgreSQL com autenticação',
-        'Integração com Gemini e monitoramento New Relic',
-        'Documentada com Swagger e publicada no Koyeb',
+        'CRUD completo de filmes, sessões e reservas com autenticação JWT',
+        'Camada de dados em Prisma + PostgreSQL com chaves e integridade referencial',
+        'Monitoramento de performance da aplicação com telemetria New Relic',
+        'Documentada com Swagger/OpenAPI e publicada no Koyeb',
       ],
     },
     stack: ['Node.js', 'Express', 'PostgreSQL', 'Prisma', 'Swagger'],
@@ -435,36 +360,6 @@ export const projects: Project[] = [
     links: [{ type: 'code', href: 'https://github.com/BrunoF2P/arandu-fibonacci-benchmarks' }],
   },
   {
-    id: 'protonscope',
-    title: 'ProtonScope',
-    category: 'data',
-    year: '2026',
-    access: 'open',
-    accent: ['#0a84ff', '#32d74b'],
-    tagline: {
-      en: 'Linux/Proton compatibility, analyzed.',
-      'pt-br': 'Compatibilidade Linux/Proton sob análise.',
-    },
-    summary: {
-      en: 'A Python toolkit that ingests ProtonDB compatibility reports and turns them into analyzable time series, documenting schema changes and historical quirks.',
-      'pt-br': 'Toolkit em Python que ingere os relatórios de compatibilidade do ProtonDB e os transforma em séries temporais analisáveis, documentando mudanças de esquema e particularidades históricas.',
-    },
-    highlights: {
-      en: [
-        'Normalizes a heterogeneous, evolving JSON schema',
-        'Documents historical breakpoints (e.g. the Feb/2022 changes)',
-        'Bridges raw community reports and usable datasets',
-      ],
-      'pt-br': [
-        'Normaliza um esquema JSON heterogêneo e em evolução',
-        'Documenta pontos de quebra históricos (ex.: mudanças de fev/2022)',
-        'Conecta relatórios brutos da comunidade a datasets utilizáveis',
-      ],
-    },
-    stack: ['Python', 'Docker'],
-    links: [{ type: 'code', href: 'https://github.com/BrunoF2P/ProtonScope' }],
-  },
-  {
     id: 'rprojetos',
     title: 'Accident Analysis',
     category: 'data',
@@ -499,12 +394,6 @@ export const projects: Project[] = [
 ];
 
 /** Experimentos menores, exibidos numa faixa compacta. */
-export const experiments: Array<{ title: string; note: Record<Lang, string>; href?: string }> = [
-  { title: 'live-usb', note: { en: 'Nix flake for building a live USB', 'pt-br': 'Flake Nix para gerar um live USB' }, href: 'https://github.com/BrunoF2P/live-usb' },
-  { title: 'arch-install', note: { en: 'Shell scripts to bootstrap Arch Linux', 'pt-br': 'Scripts shell para automatizar o Arch Linux' }, href: 'https://github.com/BrunoF2P/arch-install' },
-  { title: 'calculadora-imc', note: { en: 'A tiny BMI calculator', 'pt-br': 'Uma calculadora de IMC' }, href: 'https://github.com/BrunoF2P/calculadora-imc' },
-  { title: 'Laminar', note: { en: 'A Rust DSL, animation and asset framework', 'pt-br': 'Framework Rust com DSL, animação e assets' } },
-  { title: 'Exile-Forge', note: { en: 'A Tauri + React knowledge tool', 'pt-br': 'Ferramenta de conhecimento em Tauri + React' } },
-];
+export const experiments: Array<{ title: string; note: Record<Lang, string>; href?: string }> = [];
 
 export const featuredProjects = projects.filter((p) => p.featured);

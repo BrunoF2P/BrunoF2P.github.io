@@ -18,7 +18,7 @@ const paragraphs = [t.about.p1, t.about.p2, t.about.p3];
     <div class="about__grid">
       <div class="about__body">
         <span class="section-label" data-reveal>{t.about.kicker}</span>
-        <h2 class="section-title" data-reveal>{t.about.title}</h2>
+        <h2 class="section-title" data-split>{t.about.title}</h2>
 
         <div class="about__text" data-reveal-group>
           {paragraphs.map((p) => (
@@ -58,8 +58,8 @@ const paragraphs = [t.about.p1, t.about.p2, t.about.p3];
           <span class="about__card-label mono">{lang === 'en' ? 'Currently' : 'Atualmente'}</span>
           <p class="about__card-text">
             {lang === 'en'
-              ? 'Building Nanquink and Apito — and finishing my thesis on generational references.'
-              : 'Construindo Nanquink e Apito — e finalizando o TCC sobre referências geracionais.'}
+              ? 'Authoring the Arandu programming language (arandu-lang.dev) & advancing compiler memory safety research.'
+              : 'Evoluindo a linguagem de programação Arandu (arandu-lang.dev) e pesquisando segurança de memória em compiladores.'}
           </p>
           <span class="about__card-sign serif">{site.fullName}</span>
         </div>
@@ -160,7 +160,7 @@ const paragraphs = [t.about.p1, t.about.p2, t.about.p3];
     align-items: center;
     gap: 0.4rem;
     padding: 0.35rem 0.75rem;
-    border-radius: 999px;
+    border-radius: var(--radius-xs);
     background: var(--glass-strong);
     border: 1px solid var(--line);
     backdrop-filter: blur(14px);
@@ -207,6 +207,16 @@ const paragraphs = [t.about.p1, t.about.p2, t.about.p3];
     .about__stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1.4rem 1rem;
+    }
+  }
+
+  @media (min-width: 1500px) {
+    .about__grid {
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.75fr);
+      gap: clamp(3rem, 7vw, 8rem);
+    }
+    .about__text {
+      max-width: 66ch;
     }
   }
 </style>

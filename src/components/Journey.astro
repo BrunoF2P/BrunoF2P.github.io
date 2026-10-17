@@ -23,7 +23,7 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
     <div class="journey__grid">
       <header class="journey__head">
         <span class="section-label" data-reveal>{t.journey.kicker}</span>
-        <h2 class="section-title" data-reveal>{t.journey.title}</h2>
+        <h2 class="section-title" data-split>{t.journey.title}</h2>
         <p class="lead" data-reveal>
           {lang === 'en'
             ? 'From administrative routines to compiler research — the throughline is precision.'
@@ -34,7 +34,7 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
       <ol class="timeline">
         {items.map((item) => (
           <li class="timeline__item" data-reveal data-kind={item.kind}>
-            <span class={`timeline__dot ${item.current ? 'timeline__dot--live' : ''}`} aria-hidden="true"></span>
+            <span class="timeline__dot" aria-hidden="true"></span>
             <div class="timeline__meta">
               <span class="timeline__period mono">{item.period[lang]}</span>
               <span class="timeline__kind">{kindLabel[item.kind]}</span>
@@ -46,6 +46,15 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
               </div>
               <p class="timeline__org">{item.org[lang]}</p>
               <p class="timeline__desc">{item.desc[lang]}</p>
+              {item.responsibilities && (
+                <ul class="timeline__responsibilities">
+                  {item.responsibilities.map((resp) => (
+                    <li>
+                      <strong>{resp.title[lang]}:</strong> {resp.desc[lang]}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {item.tags && (
                 <ul class="timeline__tags">
                   {item.tags.map((tag) => (
@@ -116,15 +125,6 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
   .timeline__item[data-kind='experience'] .timeline__dot {
     border-color: var(--accent-4);
   }
-  .timeline__dot--live {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
-    animation: live 2.4s var(--ease-soft) infinite;
-  }
-  @keyframes live {
-    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
-    70% { box-shadow: 0 0 0 9px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent; }
-  }
 
   .timeline__meta {
     display: flex;
@@ -167,20 +167,16 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
   .timeline__now {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--line);
+    background: var(--glass);
     font-size: 0.66rem;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-4);
+    color: var(--accent);
     white-space: nowrap;
-  }
-  .timeline__now::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent-4);
-    animation: live 2.4s var(--ease-soft) infinite;
+    font-weight: 600;
   }
   .timeline__org {
     margin-top: 0.35rem;
@@ -193,6 +189,23 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
     font-size: var(--step--1);
     color: var(--text-2);
     line-height: 1.6;
+  }
+  .timeline__responsibilities {
+    margin: 0.75rem 0 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: var(--step--1);
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+  .timeline__responsibilities li::marker {
+    color: var(--accent);
+  }
+  .timeline__responsibilities strong {
+    color: var(--text);
+    font-weight: 600;
   }
   .timeline__tags {
     list-style: none;

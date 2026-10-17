@@ -9,16 +9,15 @@ interface Props {
 const { lang } = Astro.props;
 const t = ui[lang];
 const lines = t.hero.titleLines;
-const home = `/${lang}/`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const home = `${base}/${lang}/`;
 ---
 
 <section class="hero" id="top">
-  <div class="hero__grid" aria-hidden="true"></div>
-
   <div class="container hero__inner">
     <div class="hero__eyebrow" data-hero-fade>
       <span class="status">
-        <span class="status__dot" aria-hidden="true"></span>
+        <span class="status__tag mono">DEV</span>
         {t.hero.status}
       </span>
       <span class="hero__role mono">{site.course} · UNEB</span>
@@ -34,17 +33,19 @@ const home = `/${lang}/`;
       ))}
     </h1>
 
-    <p class="hero__lead" data-hero-fade>{t.hero.lead}</p>
+    <div class="hero__side">
+      <p class="hero__lead" data-hero-fade>{t.hero.lead}</p>
 
-    <div class="hero__cta" data-hero-fade>
-      <a class="btn btn--solid" href="#projects" data-magnetic="10">
-        <span>{t.hero.ctaProjects}</span>
-        <Icon name="lucide:arrow-down" class="icon" />
-      </a>
-      <a class="btn" href={`${home}resume`} data-magnetic="10">
-        <span>{t.hero.ctaResume}</span>
-        <Icon name="lucide:download" class="icon" />
-      </a>
+      <div class="hero__cta" data-hero-fade>
+        <a class="btn btn--solid" href="#projects" data-magnetic="10">
+          <span>{t.hero.ctaProjects}</span>
+          <Icon name="lucide:arrow-down" class="icon" />
+        </a>
+        <a class="btn" href={`${home}resume`} data-magnetic="10">
+          <span>{t.hero.ctaResume}</span>
+          <Icon name="lucide:download" class="icon" />
+        </a>
+      </div>
     </div>
   </div>
 
@@ -72,22 +73,39 @@ const home = `/${lang}/`;
     overflow: hidden;
   }
 
-  .hero__grid {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
-    background-size: 76px 76px;
-    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 72%);
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 72%);
-    opacity: 0.75;
-  }
-
   .hero__inner {
     display: flex;
     flex-direction: column;
     gap: 1.4rem;
+  }
+
+  /* Editorial two-column hero on wide screens so the space reads as intentional */
+  @media (min-width: 1024px) {
+    .hero__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+      column-gap: clamp(2rem, 6vw, 6rem);
+      align-items: end;
+    }
+    .hero__eyebrow {
+      grid-column: 1 / -1;
+    }
+    .hero__title {
+      grid-column: 1;
+    }
+    .hero__side {
+      grid-column: 2;
+      align-self: end;
+      display: flex;
+      flex-direction: column;
+      gap: 1.35rem;
+    }
+    .hero__lead {
+      max-width: 42ch;
+    }
+    .hero__side .hero__cta {
+      margin-top: 0;
+    }
   }
 
   .hero__eyebrow {
@@ -102,25 +120,17 @@ const home = `/${lang}/`;
     align-items: center;
     gap: 0.55rem;
     padding: 0.35rem 0.85rem 0.35rem 0.7rem;
-    border-radius: 999px;
+    border-radius: var(--radius-xs);
     border: 1px solid var(--line);
     background: var(--glass);
     color: var(--text-2);
     letter-spacing: 0.02em;
   }
-  .status__dot {
-    position: relative;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent-4);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-4) 60%, transparent);
-    animation: pulse 2.4s var(--ease-soft) infinite;
-  }
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-4) 55%, transparent); }
-    70% { box-shadow: 0 0 0 8px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent; }
+  .status__tag {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    color: var(--accent);
   }
   .hero__role {
     color: var(--text-3);

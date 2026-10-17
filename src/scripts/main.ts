@@ -1,9 +1,15 @@
-import { animate, inView, scroll, stagger } from 'motion';
+import { animate, frame, inView, scroll, scrollInfo, stagger } from 'motion';
 import Lenis from 'lenis';
 
 const root = document.documentElement;
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+const hasFine = fine && !reduce;
+
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const SPRING = { type: 'spring' as const, stiffness: 220, damping: 26, mass: 0.6 };
+const SPRING_SOFT = { type: 'spring' as const, stiffness: 140, damping: 20, mass: 0.7 };
 
 /* ============================================================
    Smooth scroll (Lenis)
@@ -34,10 +40,10 @@ document.addEventListener('click', (event) => {
 });
 
 /* ============================================================
-   Custom cursor
+   Custom cursor — frame-synced, reactive
    ============================================================ */
 const initCursor = () => {
-  if (!fine || reduce) return;
+  if (!hasFine) return;
   const ring = document.querySelector<HTMLElement>('.cursor');
   const dot = document.querySelector<HTMLElement>('.cursor-dot');
   if (!ring || !dot) return;
@@ -46,23 +52,24 @@ const initCursor = () => {
   let my = window.innerHeight / 2;
   let rx = mx;
   let ry = my;
-  let raf = 0;
 
   const move = (e: MouseEvent) => {
     mx = e.clientX;
     my = e.clientY;
     dot.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
   };
+
   const loop = () => {
-    rx += (mx - rx) * 0.16;
-    ry += (my - ry) * 0.16;
+    rx += (mx - rx) * 0.18;
+    ry += (my - ry) * 0.18;
     ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
-    raf = requestAnimationFrame(loop);
   };
 
   window.addEventListener('mousemove', move, { passive: true });
+  /* keepAlive = true: without it Motion runs the callback once and stops the loop. */
+  frame.update(loop, true);
 
-  const hoverTargets = 'a, button, [data-cursor], input, textarea, .chip';
+  const hoverTargets = 'a, button, [data-cursor], input, textarea, .chip, [data-tilt]';
   document.addEventListener('mouseover', (e) => {
     if ((e.target as HTMLElement)?.closest?.(hoverTargets)) root.classList.add('cursor-hover');
   });
@@ -71,28 +78,92 @@ const initCursor = () => {
   });
   document.addEventListener('mouseleave', () => root.classList.remove('cursor-ready'));
   document.addEventListener('mouseenter', () => root.classList.add('cursor-ready'));
+  document.addEventListener('pointerdown', () => root.classList.add('cursor-press'));
+  document.addEventListener('pointerup', () => root.classList.remove('cursor-press'));
 
   root.classList.add('cursor-ready');
-  loop();
-  window.addEventListener('pagehide', () => cancelAnimationFrame(raf), { once: true });
 };
 initCursor();
 
 /* ============================================================
-   Scroll reveals (motion inView)
+   Scroll progress bar + marquee velocity signal
    ============================================================ */
-const reveal = (el: Element, delay = 0) => {
-  const node = el as HTMLElement;
-  const distance = Number(node.dataset.revealDistance ?? 26);
-  animate(
-    node,
-    { opacity: [0, 1], transform: [`translateY(${distance}px)`, 'translateY(0px)'] },
-    { duration: 0.85, delay, ease: [0.22, 1, 0.36, 1] },
-  );
+const initScrollProgress = () => {
+  const bar = document.querySelector<HTMLElement>('.scroll-progress');
+  const marquees = Array.from(document.querySelectorAll<HTMLElement>('.marquee'));
+  if (!bar && !marquees.length) return;
+
+  scrollInfo((info) => {
+    if (bar) {
+      const progress = Math.max(0, Math.min(1, info.y.progress || 0));
+      bar.style.transform = `scaleX(${progress})`;
+    }
+    if (!reduce && marquees.length) {
+      /* Translate scroll velocity into a soft skew on the marquees. */
+      const velocity = Math.max(-1600, Math.min(1600, info.y.velocity || 0));
+      const skew = (velocity / 1600) * 4.5;
+      for (const m of marquees) m.style.setProperty('--skew', `${skew.toFixed(3)}deg`);
+    }
+  });
+};
+initScrollProgress();
+
+/* ============================================================
+   Split-text reveals (word level)
+   ============================================================ */
+const splitWords = (node: Node) => {
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      const text = child.textContent ?? '';
+      if (!text.trim()) continue;
+      const fragment = document.createDocumentFragment();
+      for (const token of text.split(/(\s+)/)) {
+        if (!token) continue;
+        if (!token.trim()) {
+          fragment.append(document.createTextNode(token));
+          continue;
+        }
+        const span = document.createElement('span');
+        span.className = 'split-word';
+        span.textContent = token;
+        fragment.append(span);
+      }
+      child.replaceWith(fragment);
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      splitWords(child);
+    }
+  }
 };
 
+const initSplitText = () => {
+  document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
+    splitWords(el);
+    const words = Array.from(el.querySelectorAll<HTMLElement>('.split-word'));
+    if (!words.length) return;
+    if (reduce) {
+      words.forEach((w) => (w.style.opacity = '1'));
+      return;
+    }
+    inView(
+      el,
+      () => {
+        animate(
+          words,
+          { opacity: [0, 1], y: [26, 0], rotate: [1.4, 0] },
+          { duration: 0.95, delay: stagger(0.05), ease: EASE },
+        );
+      },
+      { margin: '0px 0px -14% 0px' },
+    );
+  });
+};
+initSplitText();
+
+/* ============================================================
+   Scroll reveals — hidden up-front, released on view
+   ============================================================ */
 const initReveals = () => {
-  const items = document.querySelectorAll<HTMLElement>('[data-reveal]');
+  const items = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
   if (reduce) {
     items.forEach((el) => {
       el.style.opacity = '1';
@@ -101,52 +172,94 @@ const initReveals = () => {
     return;
   }
 
-  const groups = document.querySelectorAll<HTMLElement>('[data-reveal-group]');
-  groups.forEach((group) => {
-    const children = group.querySelectorAll<HTMLElement>(':scope > [data-reveal]');
+  const distanceOf = (el: HTMLElement) => Number(el.dataset.revealDistance ?? 26);
+  items.forEach((el) => {
+    el.style.opacity = '0';
+    el.style.transform = `translateY(${distanceOf(el)}px)`;
+  });
+
+  const enter = (el: HTMLElement, delay = 0): void => {
+    animate(
+      el,
+      { opacity: [0, 1], y: [distanceOf(el), 0] },
+      { duration: 0.9, delay, ease: EASE },
+    );
+  };
+
+  /* Grouped children animate together with a stagger. */
+  document.querySelectorAll<HTMLElement>('[data-reveal-group]').forEach((group) => {
+    const children = Array.from(group.querySelectorAll<HTMLElement>(':scope > [data-reveal]'));
+    if (!children.length) return;
     inView(
       group,
       () => {
         animate(
           children,
-          { opacity: [0, 1], transform: ['translateY(28px)', 'translateY(0px)'] },
-          { duration: 0.8, delay: stagger(0.08), ease: [0.22, 1, 0.36, 1] },
+          { opacity: [0, 1], y: [28, 0] },
+          { duration: 0.85, delay: stagger(0.08), ease: EASE },
         );
       },
       { margin: '0px 0px -12% 0px' },
     );
   });
 
+  /* Standalone reveals (group children are excluded). */
   document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-reveal-group] > [data-reveal])').forEach((el) => {
-    inView(el, () => reveal(el, Number(el.dataset.revealDelay ?? 0)), { margin: '0px 0px -10% 0px' });
+    inView(el, () => enter(el, Number(el.dataset.revealDelay ?? 0)), { margin: '0px 0px -10% 0px' });
   });
 
-  /* Safety: never leave content hidden. */
+  /* Safety net: only release what is actually on screen. */
   window.setTimeout(() => {
-    document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
-      if (getComputedStyle(el).opacity === '0') {
+    const onScreen = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.top < window.innerHeight && r.bottom > 0;
+    };
+    items.forEach((el) => {
+      if (onScreen(el) && getComputedStyle(el).opacity === '0') {
         el.style.opacity = '1';
         el.style.transform = 'none';
       }
+    });
+    document.querySelectorAll<HTMLElement>('[data-split]').forEach((host) => {
+      if (!onScreen(host)) return;
+      host.querySelectorAll<HTMLElement>('.split-word').forEach((w) => {
+        if (getComputedStyle(w).opacity === '0') w.style.opacity = '1';
+      });
     });
   }, 2600);
 };
 initReveals();
 
 /* ============================================================
-   Hero intro (line mask reveal)
+   Hero intro (line mask reveal) + scroll parallax
    ============================================================ */
 const initHero = () => {
-  const lines = document.querySelectorAll<HTMLElement>('[data-hero-line]');
-  if (!lines.length) return;
-  if (reduce) {
-    lines.forEach((l) => (l.style.transform = 'translateY(0)'));
-    return;
+  const lines = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-line]'));
+  const fades = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-fade]'));
+
+  if (lines.length) {
+    if (reduce) {
+      lines.forEach((l) => (l.style.transform = 'translateY(0)'));
+    } else {
+      animate(lines, { y: ['118%', '0%'] }, { duration: 1.1, delay: stagger(0.09, { startDelay: 0.15 }), ease: EASE_OUT });
+      fades.forEach((el, i) => {
+        animate(el, { opacity: [0, 1], y: [18, 0] }, { duration: 0.95, delay: 0.5 + i * 0.1, ease: EASE });
+      });
+    }
+  } else if (!reduce) {
+    fades.forEach((el, i) => {
+      animate(el, { opacity: [0, 1], y: [18, 0] }, { duration: 0.95, delay: 0.2 + i * 0.1, ease: EASE });
+    });
   }
-  animate(lines, { transform: ['translateY(118%)', 'translateY(0%)'] }, { duration: 1.05, delay: stagger(0.09, { startDelay: 0.15 }), ease: [0.16, 1, 0.3, 1] });
-  document.querySelectorAll<HTMLElement>('[data-hero-fade]').forEach((el, i) => {
-    animate(el, { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, { duration: 0.9, delay: 0.5 + i * 0.1, ease: [0.22, 1, 0.36, 1] });
-  });
+
+  const hero = document.querySelector<HTMLElement>('.hero');
+  const inner = document.querySelector<HTMLElement>('.hero__inner');
+  if (hero && inner && !reduce) {
+    scroll(animate(inner, { y: [0, -70], opacity: [1, 0.25] }, { ease: 'linear' }), {
+      target: hero,
+      offset: ['start start', 'end start'],
+    });
+  }
 };
 initHero();
 
@@ -157,33 +270,63 @@ const initParallax = () => {
   if (reduce) return;
   document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
     const strength = Number(el.dataset.parallax || 60);
-    scroll(
-      animate(el, { y: [strength, -strength] }, { ease: 'linear' }),
-      { target: el, offset: ['start end', 'end start'] },
-    );
+    scroll(animate(el, { y: [strength, -strength] }, { ease: 'linear' }), {
+      target: el,
+      offset: ['start end', 'end start'],
+    });
   });
 };
 initParallax();
 
 /* ============================================================
-   Magnetic buttons
+   Magnetic buttons / links
    ============================================================ */
 const initMagnetic = () => {
-  if (reduce || !fine) return;
+  if (!hasFine) return;
   document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
     const strength = Number(el.dataset.magnetic || 14);
     el.addEventListener('mousemove', (e) => {
       const r = el.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width - 0.5) * strength;
       const y = ((e.clientY - r.top) / r.height - 0.5) * strength;
-      animate(el, { x, y }, { duration: 0.4, ease: [0.22, 1, 0.36, 1] });
+      animate(el, { x, y }, SPRING);
     });
     el.addEventListener('mouseleave', () => {
-      animate(el, { x: 0, y: 0 }, { duration: 0.55, ease: [0.22, 1, 0.36, 1] });
+      animate(el, { x: 0, y: 0 }, SPRING_SOFT);
     });
   });
 };
 initMagnetic();
+
+/* ============================================================
+   3D tilt (pointer-driven, spring settle)
+   ============================================================ */
+const initTilt = () => {
+  if (!hasFine) return;
+  const max = 9;
+  document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      animate(
+        el,
+        {
+          rotateX: -py * max,
+          rotateY: px * max,
+          y: -6,
+          scale: 1.012,
+          transformPerspective: 1200,
+        },
+        SPRING,
+      );
+    });
+    el.addEventListener('pointerleave', () => {
+      animate(el, { rotateX: 0, rotateY: 0, y: 0, scale: 1, transformPerspective: 1200 }, SPRING_SOFT);
+    });
+  });
+};
+initTilt();
 
 /* ============================================================
    Counters
@@ -207,12 +350,13 @@ const initCounters = () => {
       () => {
         const counter = { value: 0 };
         const controls = animate(counter, { value: end }, {
-          duration: 1.6,
-          ease: [0.22, 1, 0.36, 1],
+          duration: 1.7,
+          ease: EASE,
           onUpdate: () => {
             el.textContent = `${prefix}${Math.round(counter.value)}${suffix}`;
           },
         });
+        animate(el, { scale: [0.82, 1] }, { duration: 0.9, ease: EASE_OUT });
         return () => controls.stop();
       },
       { margin: '0px 0px -15% 0px' },
@@ -249,6 +393,34 @@ const initNav = () => {
 };
 initNav();
 
+/* Active section highlight (scroll-spy) */
+const initNavSpy = () => {
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'));
+  if (!links.length) return;
+  const ids = links
+    .map((link) => link.getAttribute('href')?.split('#')[1])
+    .filter((id): id is string => Boolean(id));
+  const sections = ids
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => Boolean(el));
+  if (!sections.length) return;
+
+  const mark = () => {
+    const line = window.scrollY + window.innerHeight * 0.34;
+    let current = sections[0].id;
+    for (const section of sections) {
+      if (section.offsetTop <= line) current = section.id;
+    }
+    links.forEach((link) => {
+      link.classList.toggle('is-current', link.getAttribute('href')?.endsWith(`#${current}`) ?? false);
+    });
+  };
+  mark();
+  window.addEventListener('scroll', mark, { passive: true });
+  window.addEventListener('resize', mark, { passive: true });
+};
+initNavSpy();
+
 /* ============================================================
    Theme toggle
    ============================================================ */
@@ -256,12 +428,14 @@ const initTheme = () => {
   document.querySelectorAll<HTMLElement>('[data-theme-toggle]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+      root.classList.add('theme-anim');
       root.dataset.theme = next;
       try {
         localStorage.setItem('theme', next);
       } catch {
         /* ignore */
       }
+      window.setTimeout(() => root.classList.remove('theme-anim'), 620);
     });
   });
 };
@@ -271,12 +445,11 @@ initTheme();
    Project filters
    ============================================================ */
 const initFilters = () => {
-  const groups = document.querySelectorAll<HTMLElement>('[data-filters]');
-  groups.forEach((group) => {
+  document.querySelectorAll<HTMLElement>('[data-filters]').forEach((group) => {
     const buttons = group.querySelectorAll<HTMLButtonElement>('[data-filter]');
     const scope = document.querySelector<HTMLElement>(group.dataset.filters || '');
     if (!scope) return;
-    const cards = scope.querySelectorAll<HTMLElement>('[data-category]');
+    const cards = Array.from(scope.querySelectorAll<HTMLElement>('[data-category]'));
 
     buttons.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -286,9 +459,18 @@ const initFilters = () => {
           const show = value === 'all' || card.dataset.category === value;
           card.classList.toggle('is-hidden', !show);
         });
+        const visible = cards.filter((c) => !c.classList.contains('is-hidden'));
+        /* A filtered subset drops the bento mosaic for a tidy uniform grid. */
+        scope.classList.toggle('is-filtered', value !== 'all');
+        document.querySelectorAll<HTMLElement>('[data-visible-count]').forEach((out) => {
+          out.textContent = String(visible.length);
+        });
         if (!reduce) {
-          const visible = Array.from(cards).filter((c) => !c.classList.contains('is-hidden'));
-          animate(visible, { opacity: [0, 1], transform: ['translateY(16px) scale(0.99)', 'translateY(0) scale(1)'] }, { duration: 0.5, delay: stagger(0.04), ease: [0.22, 1, 0.36, 1] });
+          animate(
+            visible,
+            { opacity: [0, 1], y: [20, 0], scale: [0.985, 1] },
+            { duration: 0.55, delay: stagger(0.045), ease: EASE },
+          );
         }
       });
     });
@@ -312,6 +494,7 @@ const initCopy = () => {
       }
       if (label) {
         label.textContent = el.dataset.copyDone || 'Copied!';
+        if (!reduce) animate(el, { scale: [1, 1.045, 1] }, { duration: 0.5, ease: EASE });
         window.setTimeout(() => (label.textContent = original), 1800);
       }
     });
@@ -337,6 +520,31 @@ const initSpotlight = () => {
   });
 };
 initSpotlight();
+
+/* ============================================================
+   Card badge (cursor-following "open" affordance)
+   ============================================================ */
+const initCardBadge = () => {
+  /* The pill follows a fine pointer; without one (or with reduced motion) CSS takes over. */
+  if (!hasFine || reduce) return;
+  document.querySelectorAll<HTMLElement>('[data-badge-zone]').forEach((zone) => {
+    const badge = zone.querySelector<HTMLElement>('[data-badge-pill]');
+    if (!badge) return;
+    const place = (event: PointerEvent) => {
+      const rect = zone.getBoundingClientRect();
+      badge.style.transform = `translate3d(${event.clientX - rect.left}px, ${event.clientY - rect.top}px, 0) translate(-50%, -50%)`;
+    };
+    zone.addEventListener('pointermove', place, { passive: true });
+    zone.addEventListener('pointerenter', (event) => {
+      place(event);
+      animate(badge, { scale: 1, opacity: 1 }, SPRING);
+    });
+    zone.addEventListener('pointerleave', () => {
+      animate(badge, { scale: 0.4, opacity: 0 }, SPRING_SOFT);
+    });
+  });
+};
+initCardBadge();
 
 /* ============================================================
    Language switch (remember explicit choice)

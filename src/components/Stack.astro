@@ -14,13 +14,17 @@ const t = ui[lang];
   <div class="container">
     <header class="stack__head">
       <span class="section-label" data-reveal>{t.stack.kicker}</span>
-      <h2 class="section-title" data-reveal>{t.stack.title}</h2>
+      <h2 class="section-title" data-split>{t.stack.title}</h2>
       <p class="lead" data-reveal>{t.stack.note}</p>
     </header>
 
     <div class="bento" data-reveal-group>
       {stack.map((group) => (
-        <article class={`bento__card glass ${group.span ? 'bento__card--wide' : ''}`} data-reveal>
+        <article
+          class={`bento__card glass spotlight ${group.span ? 'bento__card--wide' : ''}`}
+          data-reveal
+          data-spotlight
+        >
           <header class="bento__header">
             <h3 class="bento__title">{t.stack.groups[group.id]}</h3>
             <span class="bento__count mono">{String(group.items.length).padStart(2, '0')}</span>
@@ -95,7 +99,7 @@ const t = ui[lang];
     align-items: center;
     gap: 0.5rem;
     padding: 0.42rem 0.85rem 0.42rem 0.5rem;
-    border-radius: 999px;
+    border-radius: var(--radius-xs);
     border: 1px solid var(--line);
     background: color-mix(in srgb, var(--glass) 100%, transparent);
     font-size: var(--step--1);

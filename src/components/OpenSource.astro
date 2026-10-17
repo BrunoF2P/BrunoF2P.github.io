@@ -21,6 +21,7 @@ const spotlight = {
 };
 
 const repos = [
+  { name: 'Arandu-Lang', href: 'https://github.com/BrunoF2P/Arandu-Lang', desc: en ? 'The Arandu programming language & compiler' : 'Linguagem de programação e compilador Arandu' },
   { name: 'Imglyze', href: 'https://github.com/BrunoF2P/Imglyze', desc: en ? 'Batch image optimizer' : 'Otimizador de imagens em lote' },
   { name: 'quijava', href: 'https://github.com/BrunoF2P/quijava', desc: en ? 'Desktop quiz platform' : 'Plataforma desktop de quizzes' },
   { name: 'FluxBlocks', href: 'https://github.com/BrunoF2P/FluxBlocks', desc: en ? 'Modern Tetris in Java' : 'Tetris moderno em Java' },
@@ -34,7 +35,7 @@ const repos = [
     <div class="opensource__panel glass">
       <div class="opensource__intro">
         <span class="section-label" data-reveal>{t.os.kicker}</span>
-        <h2 class="section-title" data-reveal>{t.os.title}</h2>
+        <h2 class="section-title" data-split>{t.os.title}</h2>
         <p class="lead" data-reveal>{t.os.lead}</p>
 
         <a class="btn btn--solid opensource__cta" href={site.github} target="_blank" rel="noopener noreferrer" data-magnetic="8" data-reveal>
@@ -61,7 +62,7 @@ const repos = [
         </a>
 
         {repos.map((repo) => (
-          <a class="repo" href={repo.href} target="_blank" rel="noopener noreferrer" data-reveal>
+          <a class="repo spotlight" href={repo.href} target="_blank" rel="noopener noreferrer" data-reveal data-spotlight>
             <Icon name="simple-icons:github" class="repo__icon" />
             <span class="repo__name">{repo.name}</span>
             <span class="repo__desc repo__desc--inline">{repo.desc}</span>
