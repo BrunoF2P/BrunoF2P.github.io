@@ -12,7 +12,7 @@ const SPRING = { type: 'spring' as const, stiffness: 220, damping: 26, mass: 0.6
 const SPRING_SOFT = { type: 'spring' as const, stiffness: 140, damping: 20, mass: 0.7 };
 
 /* ============================================================
-   Smooth scroll (Lenis)
+   Smooth scroll (Lenis) — Singleton
    ============================================================ */
 let lenis: Lenis | null = null;
 const initLenis = () => {
@@ -40,7 +40,7 @@ document.addEventListener('click', (event) => {
 });
 
 /* ============================================================
-   Custom cursor — frame-synced, reactive
+   Custom cursor — frame-synced, reactive (persisted across pages)
    ============================================================ */
 const initCursor = () => {
   if (!hasFine) return;
@@ -66,7 +66,6 @@ const initCursor = () => {
   };
 
   window.addEventListener('mousemove', move, { passive: true });
-  /* keepAlive = true: without it Motion runs the callback once and stops the loop. */
   frame.update(loop, true);
 
   const hoverTargets = 'a, button, [data-cursor], input, textarea, .chip, [data-tilt]';
@@ -88,18 +87,22 @@ initCursor();
 /* ============================================================
    Scroll progress bar + marquee velocity signal
    ============================================================ */
-const initScrollProgress = () => {
-  const bar = document.querySelector<HTMLElement>('.scroll-progress');
-  const marquees = Array.from(document.querySelectorAll<HTMLElement>('.marquee'));
-  if (!bar && !marquees.length) return;
+let progressBar: HTMLElement | null = null;
+let marquees: HTMLElement[] = [];
 
+const updateScrollProgressTargets = () => {
+  progressBar = document.querySelector<HTMLElement>('.scroll-progress');
+  marquees = Array.from(document.querySelectorAll<HTMLElement>('.marquee'));
+};
+
+const initScrollProgress = () => {
+  updateScrollProgressTargets();
   scrollInfo((info) => {
-    if (bar) {
+    if (progressBar) {
       const progress = Math.max(0, Math.min(1, info.y.progress || 0));
-      bar.style.transform = `scaleX(${progress})`;
+      progressBar.style.transform = `scaleX(${progress})`;
     }
     if (!reduce && marquees.length) {
-      /* Translate scroll velocity into a soft skew on the marquees. */
       const velocity = Math.max(-1600, Math.min(1600, info.y.velocity || 0));
       const skew = (velocity / 1600) * 4.5;
       for (const m of marquees) m.style.setProperty('--skew', `${skew.toFixed(3)}deg`);
@@ -136,7 +139,8 @@ const splitWords = (node: Node) => {
 };
 
 const initSplitText = () => {
-  document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-split]:not([data-split-done])').forEach((el) => {
+    el.dataset.splitDone = 'true';
     splitWords(el);
     const words = Array.from(el.querySelectorAll<HTMLElement>('.split-word'));
     if (!words.length) return;
@@ -157,13 +161,18 @@ const initSplitText = () => {
     );
   });
 };
-initSplitText();
 
 /* ============================================================
    Scroll reveals — hidden up-front, released on view
    ============================================================ */
 const initReveals = () => {
-  const items = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+  const items = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-reveal-init])'));
+  if (!items.length) return;
+
+  items.forEach((el) => {
+    el.dataset.revealInit = 'true';
+  });
+
   if (reduce) {
     items.forEach((el) => {
       el.style.opacity = '1';
@@ -187,7 +196,8 @@ const initReveals = () => {
   };
 
   /* Grouped children animate together with a stagger. */
-  document.querySelectorAll<HTMLElement>('[data-reveal-group]').forEach((group) => {
+  document.querySelectorAll<HTMLElement>('[data-reveal-group]:not([data-group-init])').forEach((group) => {
+    group.dataset.groupInit = 'true';
     const children = Array.from(group.querySelectorAll<HTMLElement>(':scope > [data-reveal]'));
     if (!children.length) return;
     inView(
@@ -204,7 +214,8 @@ const initReveals = () => {
   });
 
   /* Standalone reveals (group children are excluded). */
-  document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-reveal-group] > [data-reveal])').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-reveal-group] > [data-reveal]):not([data-standalone-init])').forEach((el) => {
+    el.dataset.standaloneInit = 'true';
     inView(el, () => enter(el, Number(el.dataset.revealDelay ?? 0)), { margin: '0px 0px -10% 0px' });
   });
 
@@ -228,14 +239,15 @@ const initReveals = () => {
     });
   }, 2600);
 };
-initReveals();
 
 /* ============================================================
    Hero intro (line mask reveal) + scroll parallax
    ============================================================ */
 const initHero = () => {
-  const lines = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-line]'));
-  const fades = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-fade]'));
+  const lines = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-line]:not([data-hero-init])'));
+  const fades = Array.from(document.querySelectorAll<HTMLElement>('[data-hero-fade]:not([data-hero-init])'));
+  lines.forEach((l) => (l.dataset.heroInit = 'true'));
+  fades.forEach((f) => (f.dataset.heroInit = 'true'));
 
   if (lines.length) {
     if (reduce) {
@@ -246,29 +258,32 @@ const initHero = () => {
         animate(el, { opacity: [0, 1], y: [18, 0] }, { duration: 0.95, delay: 0.5 + i * 0.1, ease: EASE });
       });
     }
-  } else if (!reduce) {
+  } else if (!reduce && fades.length) {
     fades.forEach((el, i) => {
       animate(el, { opacity: [0, 1], y: [18, 0] }, { duration: 0.95, delay: 0.2 + i * 0.1, ease: EASE });
     });
   }
 
-  const hero = document.querySelector<HTMLElement>('.hero');
-  const inner = document.querySelector<HTMLElement>('.hero__inner');
-  if (hero && inner && !reduce) {
-    scroll(animate(inner, { y: [0, -70], opacity: [1, 0.25] }, { ease: 'linear' }), {
-      target: hero,
-      offset: ['start start', 'end start'],
-    });
+  const hero = document.querySelector<HTMLElement>('.hero:not([data-hero-scroll-init])');
+  if (hero) {
+    hero.dataset.heroScrollInit = 'true';
+    const inner = hero.querySelector<HTMLElement>('.hero__inner');
+    if (inner && !reduce) {
+      scroll(animate(inner, { y: [0, -70], opacity: [1, 0.25] }, { ease: 'linear' }), {
+        target: hero,
+        offset: ['start start', 'end start'],
+      });
+    }
   }
 };
-initHero();
 
 /* ============================================================
    Parallax (scroll-linked)
    ============================================================ */
 const initParallax = () => {
   if (reduce) return;
-  document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-parallax]:not([data-parallax-init])').forEach((el) => {
+    el.dataset.parallaxInit = 'true';
     const strength = Number(el.dataset.parallax || 60);
     scroll(animate(el, { y: [strength, -strength] }, { ease: 'linear' }), {
       target: el,
@@ -276,14 +291,14 @@ const initParallax = () => {
     });
   });
 };
-initParallax();
 
 /* ============================================================
    Magnetic buttons / links
    ============================================================ */
 const initMagnetic = () => {
   if (!hasFine) return;
-  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-magnetic]:not([data-mag-init])').forEach((el) => {
+    el.dataset.magInit = 'true';
     const strength = Number(el.dataset.magnetic || 14);
     el.addEventListener('mousemove', (e) => {
       const r = el.getBoundingClientRect();
@@ -296,7 +311,6 @@ const initMagnetic = () => {
     });
   });
 };
-initMagnetic();
 
 /* ============================================================
    3D tilt (pointer-driven, spring settle)
@@ -304,7 +318,8 @@ initMagnetic();
 const initTilt = () => {
   if (!hasFine) return;
   const max = 9;
-  document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-tilt]:not([data-tilt-init])').forEach((el) => {
+    el.dataset.tiltInit = 'true';
     el.addEventListener('pointermove', (e) => {
       const r = el.getBoundingClientRect();
       const px = (e.clientX - r.left) / r.width - 0.5;
@@ -326,13 +341,13 @@ const initTilt = () => {
     });
   });
 };
-initTilt();
 
 /* ============================================================
    Counters
    ============================================================ */
 const initCounters = () => {
-  document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-count]:not([data-counter-init])').forEach((el) => {
+    el.dataset.counterInit = 'true';
     const raw = el.dataset.count || '';
     const match = raw.match(/^(\D*)(\d+)(\D*)$/);
     if (!match) {
@@ -363,89 +378,103 @@ const initCounters = () => {
     );
   });
 };
-initCounters();
 
 /* ============================================================
-   Nav: scrolled state + mobile menu
+   Nav: scrolled state
    ============================================================ */
-const initNav = () => {
-  const nav = document.querySelector<HTMLElement>('[data-nav]');
-  const onScroll = () => {
-    if (!nav) return;
-    nav.classList.toggle('is-scrolled', window.scrollY > 24);
-  };
-  onScroll();
-  window.addEventListener('scroll', onScroll, { passive: true });
+let navEl: HTMLElement | null = null;
+const updateNav = () => {
+  navEl = document.querySelector<HTMLElement>('[data-nav]');
+  if (navEl) navEl.classList.toggle('is-scrolled', window.scrollY > 24);
+};
+window.addEventListener('scroll', () => {
+  if (navEl) navEl.classList.toggle('is-scrolled', window.scrollY > 24);
+}, { passive: true });
 
-  const toggle = document.querySelector<HTMLElement>('[data-menu-toggle]');
-  const menu = document.querySelector<HTMLElement>('[data-menu]');
-  if (toggle && menu) {
-    const setOpen = (open: boolean) => {
+/* Mobile menu toggle (event delegation) */
+document.addEventListener('click', (e) => {
+  const toggle = (e.target as HTMLElement)?.closest?.('[data-menu-toggle]');
+  if (toggle) {
+    const menu = document.querySelector<HTMLElement>('[data-menu]');
+    if (menu) {
+      const open = !menu.classList.contains('is-open');
       menu.classList.toggle('is-open', open);
       toggle.setAttribute('aria-expanded', String(open));
       root.classList.toggle('menu-open', open);
       if (open) lenis?.stop();
       else lenis?.start();
-    };
-    toggle.addEventListener('click', () => setOpen(!menu.classList.contains('is-open')));
-    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
-  }
-};
-initNav();
-
-/* Active section highlight (scroll-spy) */
-const initNavSpy = () => {
-  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'));
-  if (!links.length) return;
-  const ids = links
-    .map((link) => link.getAttribute('href')?.split('#')[1])
-    .filter((id): id is string => Boolean(id));
-  const sections = ids
-    .map((id) => document.getElementById(id))
-    .filter((el): el is HTMLElement => Boolean(el));
-  if (!sections.length) return;
-
-  const mark = () => {
-    const line = window.scrollY + window.innerHeight * 0.34;
-    let current = sections[0].id;
-    for (const section of sections) {
-      if (section.offsetTop <= line) current = section.id;
     }
-    links.forEach((link) => {
-      link.classList.toggle('is-current', link.getAttribute('href')?.endsWith(`#${current}`) ?? false);
-    });
-  };
-  mark();
-  window.addEventListener('scroll', mark, { passive: true });
-  window.addEventListener('resize', mark, { passive: true });
-};
-initNavSpy();
+    return;
+  }
+  const menuLink = (e.target as HTMLElement)?.closest?.('[data-menu] a');
+  if (menuLink) {
+    const menu = document.querySelector<HTMLElement>('[data-menu]');
+    const btn = document.querySelector<HTMLElement>('[data-menu-toggle]');
+    menu?.classList.remove('is-open');
+    btn?.setAttribute('aria-expanded', 'false');
+    root.classList.remove('menu-open');
+    lenis?.start();
+  }
+});
 
 /* ============================================================
-   Theme toggle
+   Active section highlight (scroll-spy)
    ============================================================ */
-const initTheme = () => {
-  document.querySelectorAll<HTMLElement>('[data-theme-toggle]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-      root.classList.add('theme-anim');
-      root.dataset.theme = next;
-      try {
-        localStorage.setItem('theme', next);
-      } catch {
-        /* ignore */
-      }
-      window.setTimeout(() => root.classList.remove('theme-anim'), 620);
-    });
+let navSpyLinks: HTMLAnchorElement[] = [];
+let navSpySections: HTMLElement[] = [];
+
+const updateNavSpyTargets = () => {
+  navSpyLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'));
+  if (!navSpyLinks.length) {
+    navSpySections = [];
+    return;
+  }
+  const ids = navSpyLinks
+    .map((link) => link.getAttribute('href')?.split('#')[1])
+    .filter((id): id is string => Boolean(id));
+  navSpySections = ids
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => Boolean(el));
+};
+
+const checkNavSpy = () => {
+  if (!navSpySections.length || !navSpyLinks.length) return;
+  const line = window.scrollY + window.innerHeight * 0.34;
+  let current = navSpySections[0].id;
+  for (const section of navSpySections) {
+    if (section.offsetTop <= line) current = section.id;
+  }
+  navSpyLinks.forEach((link) => {
+    link.classList.toggle('is-current', link.getAttribute('href')?.endsWith(`#${current}`) ?? false);
   });
 };
-initTheme();
+
+window.addEventListener('scroll', checkNavSpy, { passive: true });
+window.addEventListener('resize', checkNavSpy, { passive: true });
+
+/* ============================================================
+   Theme toggle (event delegation)
+   ============================================================ */
+document.addEventListener('click', (e) => {
+  const btn = (e.target as HTMLElement)?.closest?.('[data-theme-toggle]');
+  if (!btn) return;
+  const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+  root.classList.add('theme-anim');
+  root.dataset.theme = next;
+  try {
+    localStorage.setItem('theme', next);
+  } catch {
+    /* ignore */
+  }
+  window.setTimeout(() => root.classList.remove('theme-anim'), 620);
+});
 
 /* ============================================================
    Project filters
    ============================================================ */
 const initFilters = () => {
-  document.querySelectorAll<HTMLElement>('[data-filters]').forEach((group) => {
+  document.querySelectorAll<HTMLElement>('[data-filters]:not([data-filter-init])').forEach((group) => {
+    group.dataset.filterInit = 'true';
     const buttons = group.querySelectorAll<HTMLButtonElement>('[data-filter]');
     const scope = document.querySelector<HTMLElement>(group.dataset.filters || '');
     if (!scope) return;
@@ -460,7 +489,6 @@ const initFilters = () => {
           card.classList.toggle('is-hidden', !show);
         });
         const visible = cards.filter((c) => !c.classList.contains('is-hidden'));
-        /* A filtered subset drops the bento mosaic for a tidy uniform grid. */
         scope.classList.toggle('is-filtered', value !== 'all');
         document.querySelectorAll<HTMLElement>('[data-visible-count]').forEach((out) => {
           out.textContent = String(visible.length);
@@ -476,38 +504,35 @@ const initFilters = () => {
     });
   });
 };
-initFilters();
 
 /* ============================================================
-   Copy to clipboard
+   Copy to clipboard (event delegation)
    ============================================================ */
-const initCopy = () => {
-  document.querySelectorAll<HTMLElement>('[data-copy]').forEach((el) => {
-    const label = el.querySelector<HTMLElement>('[data-copy-label]');
-    const original = label?.textContent ?? '';
-    el.addEventListener('click', async () => {
-      const value = el.dataset.copy || '';
-      try {
-        await navigator.clipboard.writeText(value);
-      } catch {
-        /* ignore */
-      }
-      if (label) {
-        label.textContent = el.dataset.copyDone || 'Copied!';
-        if (!reduce) animate(el, { scale: [1, 1.045, 1] }, { duration: 0.5, ease: EASE });
-        window.setTimeout(() => (label.textContent = original), 1800);
-      }
-    });
-  });
-};
-initCopy();
+document.addEventListener('click', async (e) => {
+  const el = (e.target as HTMLElement)?.closest?.('[data-copy]') as HTMLElement | null;
+  if (!el) return;
+  const label = el.querySelector<HTMLElement>('[data-copy-label]');
+  const original = label?.textContent ?? '';
+  const value = el.dataset.copy || '';
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    /* ignore */
+  }
+  if (label) {
+    label.textContent = el.dataset.copyDone || 'Copied!';
+    if (!reduce) animate(el, { scale: [1, 1.045, 1] }, { duration: 0.5, ease: EASE });
+    window.setTimeout(() => (label.textContent = original), 1800);
+  }
+});
 
 /* ============================================================
    Spotlight (cursor-follow glow inside cards)
    ============================================================ */
 const initSpotlight = () => {
   if (!fine) return;
-  document.querySelectorAll<HTMLElement>('[data-spotlight]').forEach((el) => {
+  document.querySelectorAll<HTMLElement>('[data-spotlight]:not([data-spotlight-init])').forEach((el) => {
+    el.dataset.spotlightInit = 'true';
     el.addEventListener(
       'pointermove',
       (event) => {
@@ -519,15 +544,14 @@ const initSpotlight = () => {
     );
   });
 };
-initSpotlight();
 
 /* ============================================================
    Card badge (cursor-following "open" affordance)
    ============================================================ */
 const initCardBadge = () => {
-  /* The pill follows a fine pointer; without one (or with reduced motion) CSS takes over. */
   if (!hasFine || reduce) return;
-  document.querySelectorAll<HTMLElement>('[data-badge-zone]').forEach((zone) => {
+  document.querySelectorAll<HTMLElement>('[data-badge-zone]:not([data-badge-init])').forEach((zone) => {
+    zone.dataset.badgeInit = 'true';
     const badge = zone.querySelector<HTMLElement>('[data-badge-pill]');
     if (!badge) return;
     const place = (event: PointerEvent) => {
@@ -544,52 +568,40 @@ const initCardBadge = () => {
     });
   });
 };
-initCardBadge();
 
 /* ============================================================
-   Language switch (remember explicit choice)
+   Language switch (event delegation, remember choice)
    ============================================================ */
-const initLangSwitch = () => {
-  document.querySelectorAll<HTMLElement>('[data-set-lang]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const value = el.dataset.setLang;
-      if (value) {
-        document.cookie = `lang=${value}; path=/; max-age=31536000; samesite=lax`;
-      }
-    });
-  });
-};
-initLangSwitch();
+document.addEventListener('click', (e) => {
+  const el = (e.target as HTMLElement)?.closest?.('[data-set-lang]') as HTMLElement | null;
+  if (!el) return;
+  const value = el.dataset.setLang;
+  if (value) {
+    document.cookie = `lang=${value}; path=/; max-age=31536000; samesite=lax`;
+  }
+});
 
 /* ============================================================
-   Page transition curtain
+   Page orchestration (runs on first load and astro:page-load)
    ============================================================ */
-const initPageTransition = () => {
-  window.addEventListener('pageshow', () => root.classList.remove('is-leaving'));
-  if (reduce) return;
-  document.addEventListener('click', (event) => {
-    if (event.defaultPrevented) return;
-    const link = (event.target as HTMLElement)?.closest?.('a[href]') as HTMLAnchorElement | null;
-    if (!link) return;
-    const href = link.getAttribute('href') || '';
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-    if (link.target === '_blank' || link.hasAttribute('download')) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    let url: URL;
-    try {
-      url = new URL(link.href, location.href);
-    } catch {
-      return;
-    }
-    if (url.origin !== location.origin) return;
-    if (url.pathname === location.pathname && url.search === location.search) return;
-    event.preventDefault();
-    root.classList.add('is-leaving');
-    window.setTimeout(() => {
-      location.href = url.href;
-    }, 430);
-  });
+const initPage = () => {
+  root.classList.remove('menu-open');
+  updateScrollProgressTargets();
+  updateNav();
+  updateNavSpyTargets();
+  checkNavSpy();
+  initSplitText();
+  initReveals();
+  initHero();
+  initParallax();
+  initMagnetic();
+  initTilt();
+  initCounters();
+  initFilters();
+  initSpotlight();
+  initCardBadge();
+  root.classList.add('motion-ready');
 };
-initPageTransition();
 
-root.classList.add('motion-ready');
+initPage();
+document.addEventListener('astro:page-load', initPage);
