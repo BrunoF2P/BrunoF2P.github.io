@@ -175,22 +175,25 @@ const columns = [
 
   .footer__wordmark {
     display: block;
-    line-height: 0.78;
-    letter-spacing: -0.05em;
+    line-height: 1;
+    letter-spacing: -0.04em;
     font-weight: 800;
-    font-size: min(12vw, 11rem);
+    font-size: clamp(2rem, 10.5vw, 9.5rem);
     text-align: center;
     white-space: nowrap;
     color: transparent;
     -webkit-text-stroke: 1px var(--line);
-    margin-bottom: -0.06em;
+    margin: clamp(2rem, 5vw, 4rem) 0 clamp(1.8rem, 4vw, 3rem);
     user-select: none;
+    pointer-events: none;
   }
   .footer__wordmark span {
+    display: inline-block;
     color: transparent;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--text) 55%, transparent), transparent 85%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text) 45%, transparent) 0%, color-mix(in srgb, var(--text) 12%, transparent) 100%);
     -webkit-background-clip: text;
     background-clip: text;
+    padding-bottom: 0.05em;
   }
 
   .footer__bottom {
@@ -199,7 +202,7 @@ const columns = [
     align-items: center;
     justify-content: space-between;
     gap: 0.8rem 1.5rem;
-    padding: 1.4rem 0 2rem;
+    padding: 1.6rem 0 2.2rem;
     border-top: 1px solid var(--line-soft);
     font-size: 0.72rem;
     color: var(--text-3);
