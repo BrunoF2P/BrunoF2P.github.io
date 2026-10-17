@@ -1,293 +1,212 @@
 ---
-import {Image} from "astro:assets";
-import { Icon } from 'astro-icon/components'
-import image from '../assets/profile.jpg';
-import enMessages from '../messages/en.js';
-import ptMessages from '../messages/pt-br.js';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import profile from '../assets/profile.jpg';
+import { site } from '../data/site';
+import { ui, type Lang } from '../i18n/ui';
 
-const locale = Astro.url.pathname.startsWith("/pt-br") ? "pt-br" : "en";
-const messages = locale === 'pt-br' ? ptMessages : enMessages;
-
-const title = messages.about.title;
-const subtitle = messages.about.subtitle;
-const description = messages.about.description;
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const paragraphs = [t.about.p1, t.about.p2, t.about.p3];
 ---
 
-<div id="about" class="about-field">
-    <div class="background-down-top"></div>
-    <div class="background-top">
-        <div class="content">
-            <ul class="user-info">
-                <Image class="profile-image" src={image} alt="Foto de perfil de Bruno Bispo" decoding="async" loading="eager" />
-                <h1 class="name">Bruno Bispo</h1>
-                <div class="icons">
-                    <a href="mailto:brunobispo.saints@gmail.com" target="_blank" rel="noopener noreferrer" aria-label="Enviar email para Bruno Bispo">
-                        <Icon name="email" aria-hidden="true" />
-                    </a>
-                    <a href="https://github.com/brunof2p" target="_blank" rel="noopener noreferrer" aria-label="Visitar perfil do GitHub de Bruno Bispo">
-                        <Icon name="github" aria-hidden="true" />
-                    </a>
-                    <a href="https://linkedin.com/in/brunof2p" target="_blank" rel="noopener noreferrer" aria-label="Visitar perfil do LinkedIn de Bruno Bispo">
-                        <Icon name="linkedin" aria-hidden="true" />
-                    </a>
-                </div>
-            </ul>
-            <ul class="about-info">
-                <div class="detail-title">
-                    <div class="cube" aria-hidden="true"></div>
-                    <h1 style="font-weight: bold;">{title}</h1>
-                </div>
-                <h2 style="padding-bottom: 2rem; padding-top: 2rem">{subtitle}</h2>
-                <p class="description">{description}</p>
-            </ul>
+<section class="section about" id="about">
+  <div class="container">
+    <div class="about__grid">
+      <div class="about__body">
+        <span class="section-label" data-reveal>{t.about.kicker}</span>
+        <h2 class="section-title" data-reveal>{t.about.title}</h2>
+
+        <div class="about__text" data-reveal-group>
+          {paragraphs.map((p) => (
+            <p data-reveal>{p}</p>
+          ))}
         </div>
+
+        <ul class="about__stats" data-reveal-group>
+          {t.about.stats.map((stat) => (
+            <li class="about__stat" data-reveal>
+              <span class="about__stat-value" data-count={stat.value}>{stat.value}</span>
+              <span class="about__stat-label">{stat.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <aside class="about__aside" data-reveal>
+        <figure class="portrait">
+          <Image
+            src={profile}
+            alt={`${site.name} — portrait`}
+            widths={[320, 480, 720]}
+            sizes="(max-width: 900px) 70vw, 340px"
+            quality={88}
+            loading="lazy"
+            class="portrait__img"
+          />
+          <div class="portrait__glow" aria-hidden="true"></div>
+          <figcaption class="portrait__caption mono">
+            <Icon name="lucide:map-pin" />
+            {site.city}
+          </figcaption>
+        </figure>
+
+        <div class="about__card glass">
+          <span class="about__card-label mono">{lang === 'en' ? 'Currently' : 'Atualmente'}</span>
+          <p class="about__card-text">
+            {lang === 'en'
+              ? 'Building Nanquink and Apito — and finishing my thesis on generational references.'
+              : 'Construindo Nanquink e Apito — e finalizando o TCC sobre referências geracionais.'}
+          </p>
+          <span class="about__card-sign serif">{site.fullName}</span>
+        </div>
+      </aside>
     </div>
-    <div class="background-bottom">
-        <div class="background-down-bottom"></div>
-    </div>
-</div>
+  </div>
+</section>
 
 <style>
-    [data-icon] {
-        font-size: 2.2rem;
-    }
-    .about-field {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        margin-top: 6%;
-        position: relative;
-    }
-    .background-top, .background-down-top, .background-down-bottom, .background-bottom {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        color: white;
-    }
-    .background-down-top {
-        background-color: #242e3a;
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0;
-        z-index: 1;
-        margin-top: -5%;
-        clip-path: polygon(
-            0% 100%, 0% 5%, 
-            4.16% 5%, 4.16% 18%, 
-            8.33% 18%, 8.33% 9%, 
-            12.5% 9%, 12.5% 20%, 
-            16.66% 20%, 16.66% 13%, 
-            20.83% 13%, 20.83% 15%, 
-            25% 15%, 25% 10%, 
-            29.16% 10%, 29.16% 25%, 
-            33.33% 25%, 33.33% 15%, 
-            37.5% 15%, 37.5% 20%, 
-            41.66% 20%, 41.66% 10%, 
-            45.83% 10%, 45.83% 25%, 
-            50% 25%, 50% 15%, 
-            54.16% 15%, 54.16% 20%, 
-            58.33% 20%, 58.33% 10%, 
-            62.5% 10%, 62.5% 25%, 
-            66.66% 25%, 66.66% 15%, 
-            70.83% 15%, 70.83% 20%, 
-            75% 20%, 75% 10%, 
-            79.16% 10%, 79.16% 25%, 
-            83.33% 25%, 83.33% 15%, 
-            87.5% 15%, 87.5% 20%, 
-            91.66% 20%, 91.66% 10%, 
-            95.83% 10%, 95.83% 25%, 
-            100% 25%, 100% 100%
-        );
-        
-    }
-    .background-top {
-        background-color: #2b3443;
-        height: 100%;
-        width: 100%;
-        z-index: 2;
-        clip-path: polygon(
-            0% 100%, 0% 5%, 
-            10% 5%, 10% 18%, 
-            20% 18%, 20% 9%, 
-            30% 9%, 30% 20%, 
-            40% 20%, 40% 13%, 
-            50% 13%, 50% 15%, 
-            60% 15%, 60% 10%, 
-            70% 10%, 70% 25%, 
-            80% 25%, 80% 15%, 
-            90% 15%, 90% 20%, 
-            100% 20%, 100% 100%
-        );
-    }
+  .about__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: start;
+  }
 
-    .background-bottom {
-        background-color: #202733;
-        height: 50vh;
-        width: 100%;
-        position: absolute;
-        bottom: 0;
-        z-index: 3;
-        clip-path: polygon(
-            0% 100%, 0% 80%, 
-            10% 80%, 10% 75%, 
-            20% 75%, 20% 65%, 
-            30% 65%, 30% 80%, 
-            40% 80%, 40% 72%, 
-            50% 72%, 50% 85%, 
-            60% 85%, 60% 90%, 
-            70% 90%, 70% 75%, 
-            80% 75%, 80% 60%, 
-            90% 60%, 90% 80%, 
-            100% 80%, 100% 100%
-        );
-    }
+  .about__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    margin-top: 1.6rem;
+    max-width: 62ch;
+  }
+  .about__text p {
+    color: var(--text-2);
+    font-size: var(--step-0);
+    line-height: 1.7;
+  }
+  .about__text p:first-child {
+    color: var(--text);
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
 
-    .background-down-bottom {
-        background-color: #242e3a;
-        height: 50vh;
-        width: 100%;
-        position: absolute;
-        bottom: 0;
-        z-index: 1;
-        clip-path: polygon(
-            0% 0%, 0% 95%, 
-            4.16% 95%, 4.16% 82%, 
-            8.33% 82%, 8.33% 91%, 
-            12.5% 91%, 12.5% 80%, 
-            16.66% 80%, 16.66% 87%, 
-            20.83% 87%, 20.83% 85%, 
-            25% 85%, 25% 90%, 
-            29.16% 90%, 29.16% 75%, 
-            33.33% 75%, 33.33% 85%, 
-            37.5% 85%, 37.5% 80%, 
-            41.66% 80%, 41.66% 90%, 
-            45.83% 90%, 45.83% 75%, 
-            50% 75%, 50% 85%, 
-            54.16% 85%, 54.16% 80%, 
-            58.33% 80%, 58.33% 90%, 
-            62.5% 90%, 62.5% 75%, 
-            66.66% 75%, 66.66% 85%, 
-            70.83% 85%, 70.83% 80%, 
-            75% 80%, 75% 90%, 
-            79.16% 90%, 79.16% 75%, 
-            83.33% 75%, 83.33% 85%, 
-            87.5% 85%, 87.5% 80%, 
-            91.66% 80%, 91.66% 90%, 
-            95.83% 90%, 95.83% 75%, 
-            100% 75%, 100% 0%
-        );
-    }
-    .content {
-        display: flex;
-        flex-direction: row;
-        margin-top: 12rem;
-        margin-bottom: 12rem;
-        align-items: center;
-    }
-    .description {
-        color: white;
-        font-size: 1.2rem;
-        opacity: 0.7;
-        max-width: 1200px;
-    }
-    .user-info {
-        flex: 1 1 50%;
-        display: flex;
-        flex-direction: column;
-        text-align: center;
-        align-items: center;
-    }
-    .icons{
-        display: flex;
-        justify-content: center;
-        flex-direction: row;
-        gap: 1rem;
-    }
-    .icons a:hover [data-icon] {
-        color: #b8772e;
-    }
-    .about-info {
-        flex: 1 1 50%;
-        flex-direction: column;
-        text-align: start;
-        padding-right: 13.5rem;
-        word-wrap: break-word;
-    }
-    .profile-image {
-        width: 15vw;
-        height: 15vw;
-        max-width: 200px;
-        max-height: 200px;
-        border-radius: 50%;
-        border: 6px solid #78d7d5;
-        padding: 6px;
-    }
-    .name{
-        font-weight: lighter;
-    }
-    .detail-title {
-        display: flex;
-        align-items: center;
-        gap: 25px; 
-    }
+  .about__stats {
+    list-style: none;
+    margin: 2.6rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 1.6rem;
+  }
+  .about__stat-value {
+    display: block;
+    font-size: var(--step-2);
+    font-weight: 750;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .about__stat-label {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: var(--step--1);
+    color: var(--text-3);
+    line-height: 1.35;
+  }
 
-    .cube {
-        width: 10px;
-        height: 10px;
-        background-color: #78d7d5;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;    
-    }
+  .about__aside {
+    position: sticky;
+    top: 7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .portrait {
+    position: relative;
+    margin: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    isolation: isolate;
+  }
+  .portrait__img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    filter: saturate(1.05) contrast(1.03);
+  }
+  .portrait__glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(200deg, transparent 40%, color-mix(in srgb, var(--bg) 85%, transparent));
+    z-index: 1;
+  }
+  .portrait__caption {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: var(--glass-strong);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    font-size: 0.75rem;
+    color: var(--text-2);
+  }
+  .portrait__caption :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
 
-    .cube::after {
-        content: "";
-        position: absolute;
-        inset: -5px;
-        border: 2px solid #78d7d5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+  .about__card {
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .about__card-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .about__card-text {
+    font-size: var(--step--1);
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+  .about__card-sign {
+    font-size: 1.35rem;
+    color: var(--text);
+    margin-top: 0.2rem;
+  }
 
-    @media screen and (max-width: 768px) {
-    .background-top, .background-down-top {
-        height: auto;
-        min-height: 100vh;
+  @media (max-width: 900px) {
+    .about__grid {
+      grid-template-columns: 1fr;
     }
-    .profile-image {
-        width: 30vw;
-        height: 30vw;
+    .about__aside {
+      position: static;
+      max-width: 420px;
     }
-    .content {
-        flex-direction: column;
-        margin-top: 18rem;
-        margin-bottom: 12rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        align-items: normal;
+    .about__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.4rem 1rem;
     }
-    .about-info {
-        width: 100%;
-        align-items: center;
-        text-align: center;
-        padding-left: 0;
-    }
-    .user-info {
-        margin-bottom: 2rem;
-        padding-left: 0;
-    }
-    .detail-title {
-        flex-direction: column;
-        align-items: center;
-    }
-    .cube{
-        display: none;
-    }
-
-}
-
+  }
 </style>

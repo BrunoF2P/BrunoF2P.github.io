@@ -1,0 +1,142 @@
+---
+import { Icon } from 'astro-icon/components';
+import { stack } from '../data/stack';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+
+<section class="section stack" id="stack">
+  <div class="container">
+    <header class="stack__head">
+      <span class="section-label" data-reveal>{t.stack.kicker}</span>
+      <h2 class="section-title" data-reveal>{t.stack.title}</h2>
+      <p class="lead" data-reveal>{t.stack.note}</p>
+    </header>
+
+    <div class="bento" data-reveal-group>
+      {stack.map((group) => (
+        <article class={`bento__card glass ${group.span ? 'bento__card--wide' : ''}`} data-reveal>
+          <header class="bento__header">
+            <h3 class="bento__title">{t.stack.groups[group.id]}</h3>
+            <span class="bento__count mono">{String(group.items.length).padStart(2, '0')}</span>
+          </header>
+          <ul class="bento__list">
+            {group.items.map((item) => (
+              <li class="tech" style={`--hue:${item.hue}`} data-cursor>
+                <span class="tech__icon">
+                  <Icon name={item.icon} />
+                </span>
+                <span class="tech__name">{item.name}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack__head {
+    max-width: 60ch;
+    margin-bottom: clamp(2rem, 5vw, 3.4rem);
+  }
+
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .bento__card {
+    grid-column: span 3;
+    padding: clamp(1.2rem, 2.4vw, 1.8rem);
+    transition: transform 0.5s var(--ease), border-color 0.4s var(--ease);
+  }
+  .bento__card--wide {
+    grid-column: span 6;
+  }
+  .bento__card:hover {
+    transform: translateY(-3px);
+    border-color: var(--ring);
+  }
+  .bento__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .bento__title {
+    font-size: var(--step-1);
+    letter-spacing: -0.02em;
+  }
+  .bento__count {
+    font-size: 0.75rem;
+    color: var(--text-3);
+  }
+
+  .bento__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+  .tech {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.42rem 0.85rem 0.42rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--glass) 100%, transparent);
+    font-size: var(--step--1);
+    color: var(--text-2);
+    transition: color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.35s var(--ease),
+      box-shadow 0.35s var(--ease);
+  }
+  .tech:hover {
+    color: var(--text);
+    border-color: color-mix(in srgb, var(--hue) 55%, var(--line));
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -16px color-mix(in srgb, var(--hue) 80%, transparent);
+  }
+  .tech__icon {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--hue) 16%, transparent);
+    transition: background 0.35s var(--ease), transform 0.35s var(--ease);
+  }
+  .tech:hover .tech__icon {
+    background: color-mix(in srgb, var(--hue) 26%, transparent);
+    transform: rotate(-6deg) scale(1.06);
+  }
+  .tech__icon :global(svg) {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+  .tech__name {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 820px) {
+    .bento {
+      grid-template-columns: 1fr;
+    }
+    .bento__card,
+    .bento__card--wide {
+      grid-column: span 1;
+    }
+  }
+</style>

@@ -1,0 +1,214 @@
+---
+import { timeline } from '../data/experience';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+
+const kindLabel: Record<string, string> = {
+  education: t.journey.education,
+  experience: t.journey.experience,
+  course: t.journey.courses,
+  milestone: lang === 'en' ? 'Milestone' : 'Marco',
+};
+
+const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
+---
+
+<section class="section journey" id="journey">
+  <div class="container">
+    <div class="journey__grid">
+      <header class="journey__head">
+        <span class="section-label" data-reveal>{t.journey.kicker}</span>
+        <h2 class="section-title" data-reveal>{t.journey.title}</h2>
+        <p class="lead" data-reveal>
+          {lang === 'en'
+            ? 'From administrative routines to compiler research — the throughline is precision.'
+            : 'De rotinas administrativas à pesquisa em compiladores — o fio condutor é a precisão.'}
+        </p>
+      </header>
+
+      <ol class="timeline">
+        {items.map((item) => (
+          <li class="timeline__item" data-reveal data-kind={item.kind}>
+            <span class={`timeline__dot ${item.current ? 'timeline__dot--live' : ''}`} aria-hidden="true"></span>
+            <div class="timeline__meta">
+              <span class="timeline__period mono">{item.period[lang]}</span>
+              <span class="timeline__kind">{kindLabel[item.kind]}</span>
+            </div>
+            <div class="timeline__card glass">
+              <div class="timeline__card-head">
+                <h3 class="timeline__title">{item.title[lang]}</h3>
+                {item.current && <span class="timeline__now mono">{t.journey.now}</span>}
+              </div>
+              <p class="timeline__org">{item.org[lang]}</p>
+              <p class="timeline__desc">{item.desc[lang]}</p>
+              {item.tags && (
+                <ul class="timeline__tags">
+                  {item.tags.map((tag) => (
+                    <li class="chip">{tag}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .journey__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(2rem, 6vw, 5rem);
+  }
+  .journey__head {
+    position: sticky;
+    top: 7rem;
+    align-self: start;
+  }
+
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent-2) 55%, transparent);
+    opacity: 0.6;
+  }
+  .timeline__item {
+    position: relative;
+    padding-left: 2.2rem;
+  }
+  .timeline__dot {
+    position: absolute;
+    left: 0;
+    top: 0.65rem;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--text-3);
+    z-index: 1;
+  }
+  .timeline__item[data-kind='education'] .timeline__dot {
+    border-color: var(--accent);
+  }
+  .timeline__item[data-kind='milestone'] .timeline__dot {
+    border-color: var(--accent-2);
+  }
+  .timeline__item[data-kind='experience'] .timeline__dot {
+    border-color: var(--accent-4);
+  }
+  .timeline__dot--live {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+    animation: live 2.4s var(--ease-soft) infinite;
+  }
+  @keyframes live {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+    70% { box-shadow: 0 0 0 9px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  .timeline__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.45rem;
+  }
+  .timeline__period {
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--text-2);
+  }
+  .timeline__kind {
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding-left: 0.7rem;
+    border-left: 1px solid var(--line);
+  }
+
+  .timeline__card {
+    padding: 1.1rem 1.3rem 1.2rem;
+    transition: transform 0.5s var(--ease), border-color 0.4s var(--ease), background 0.4s var(--ease);
+  }
+  .timeline__card:hover {
+    transform: translateY(-3px);
+    border-color: var(--ring);
+  }
+  .timeline__card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .timeline__title {
+    font-size: var(--step-1);
+    letter-spacing: -0.02em;
+  }
+  .timeline__now {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-4);
+    white-space: nowrap;
+  }
+  .timeline__now::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-4);
+    animation: live 2.4s var(--ease-soft) infinite;
+  }
+  .timeline__org {
+    margin-top: 0.35rem;
+    font-size: var(--step--1);
+    color: var(--accent);
+    font-weight: 550;
+  }
+  .timeline__desc {
+    margin-top: 0.6rem;
+    font-size: var(--step--1);
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+  .timeline__tags {
+    list-style: none;
+    margin: 0.9rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  @media (max-width: 900px) {
+    .journey__grid {
+      grid-template-columns: 1fr;
+    }
+    .journey__head {
+      position: static;
+    }
+  }
+</style>

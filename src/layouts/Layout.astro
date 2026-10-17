@@ -1,54 +1,150 @@
 ---
-import Footer from "../components/Footer.astro";
-import Main from "../components/Main.astro";
-import Menu from "../components/Menu.astro";
-const locale = Astro.url.pathname.startsWith("/pt-br") ? "pt-br" : "en";
+import '@fontsource-variable/inter';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '../styles/global.css';
+
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+}
+
+const { lang, title, description } = Astro.props;
+const t = ui[lang];
+const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${t.hero.role}`;
+const desc = description ?? t.hero.lead;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 ---
 
 <!doctype html>
-<html lang={locale}>
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Bruno Bispo</title>
-	</head>
-	<body>
-		<Menu />
-		<Main />
-		<slot />
-	</body>
-	<footer>
-		<Footer/>
-	</footer>
+<html lang={lang} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === 'pt-br' ? 'pt_BR' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={desc} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang="en" href={new URL(`/en/`, Astro.site ?? Astro.url.origin).href} />
+    <link rel="alternate" hreflang="pt-br" href={new URL(`/pt-br/`, Astro.site ?? Astro.url.origin).href} />
+
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          var stored = localStorage.getItem('theme');
+          var theme =
+            stored ||
+            (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          d.dataset.theme = theme;
+        } catch (e) {
+          d.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link btn" href="#main">Skip to content</a>
+
+    <div class="ambient" aria-hidden="true">
+      <div class="ambient__blob ambient__blob--1"></div>
+      <div class="ambient__blob ambient__blob--2"></div>
+      <div class="ambient__blob ambient__blob--3"></div>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <div class="curtain" aria-hidden="true"><span class="curtain__word">{site.handle}</span></div>
+
+    <div class="cursor" aria-hidden="true"></div>
+    <div class="cursor-dot" aria-hidden="true"></div>
+
+    <Nav lang={lang} />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer lang={lang} />
+
+    <script>
+      import '../scripts/main';
+    </script>
+  </body>
 </html>
 
 <style is:global>
-	@font-face {
-		font-family: 'Roboto';
-		src: url('/fonts/Roboto-Regular.ttf') format('truetype');
-		font-weight: 400;
-		font-style: normal;
-		font-display: swap;
-	}
-	@font-face {
-		font-family: 'Roboto';
-		src: url('/fonts/Roboto-Bold.ttf') format('truetype');
-		font-weight: 700;
-		font-style: normal;
-		font-display: swap;
-	}
-	html,
-	body {
-		font-family: 'Roboto', serif;
-		background-color: #202733;
-		margin: 0;
-		padding: 0;
-		width: 100%;
-		height: 100%;
-		overflow-x: hidden;
-	}
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 200;
+    transform: translateY(-160%);
+    padding: 0.6rem 1rem;
+  }
+  .skip-link:focus {
+    transform: translateY(0);
+  }
 
+  .curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.7s var(--ease);
+  }
+  .curtain__word {
+    font-family: var(--font-mono);
+    font-size: var(--step-2);
+    letter-spacing: 0.3em;
+    color: var(--text-3);
+    opacity: 0;
+    transition: opacity 0.3s var(--ease);
+  }
+  html.is-leaving .curtain {
+    clip-path: inset(0 0 0 0);
+    pointer-events: all;
+  }
+  html.is-leaving .curtain__word {
+    opacity: 1;
+  }
+  html.is-loaded .curtain {
+    clip-path: inset(0 0 100% 0);
+  }
 
+  @media print {
+    .ambient,
+    .grain,
+    .cursor,
+    .cursor-dot,
+    .curtain,
+    .site-nav,
+    .site-footer {
+      display: none !important;
+    }
+  }
 </style>

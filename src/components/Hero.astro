@@ -1,0 +1,249 @@
+---
+import { Icon } from 'astro-icon/components';
+import { site } from '../data/site';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const lines = t.hero.titleLines;
+const home = `/${lang}/`;
+---
+
+<section class="hero" id="top">
+  <div class="hero__grid" aria-hidden="true"></div>
+
+  <div class="container hero__inner">
+    <div class="hero__eyebrow" data-hero-fade>
+      <span class="status">
+        <span class="status__dot" aria-hidden="true"></span>
+        {t.hero.status}
+      </span>
+      <span class="hero__role mono">{site.course} · UNEB</span>
+    </div>
+
+    <h1 class="hero__title">
+      {lines.map((line, i) => (
+        <span class="line">
+          <span class={i === lines.length - 1 ? 'line__inner serif gradient-text' : 'line__inner'} data-hero-line>
+            {line}
+          </span>
+        </span>
+      ))}
+    </h1>
+
+    <p class="hero__lead" data-hero-fade>{t.hero.lead}</p>
+
+    <div class="hero__cta" data-hero-fade>
+      <a class="btn btn--solid" href="#projects" data-magnetic="10">
+        <span>{t.hero.ctaProjects}</span>
+        <Icon name="lucide:arrow-down" class="icon" />
+      </a>
+      <a class="btn" href={`${home}resume`} data-magnetic="10">
+        <span>{t.hero.ctaResume}</span>
+        <Icon name="lucide:download" class="icon" />
+      </a>
+    </div>
+  </div>
+
+  <div class="container hero__foot">
+    <span class="hero__based mono" data-hero-fade>
+      <Icon name="lucide:map-pin" class="hero__pin" />
+      {site.location}
+    </span>
+    <a class="scroll-cue" href="#about" aria-label={t.hero.scroll} data-hero-fade>
+      <span class="scroll-cue__label mono">{t.hero.scroll}</span>
+      <span class="scroll-cue__line" aria-hidden="true"><span></span></span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: clamp(6rem, 14vh, 9rem);
+    padding-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  .hero__grid {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+    background-size: 76px 76px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 72%);
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 72%);
+    opacity: 0.75;
+  }
+
+  .hero__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  .hero__eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    font-size: var(--step--1);
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.35rem 0.85rem 0.35rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--glass);
+    color: var(--text-2);
+    letter-spacing: 0.02em;
+  }
+  .status__dot {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-4);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-4) 60%, transparent);
+    animation: pulse 2.4s var(--ease-soft) infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-4) 55%, transparent); }
+    70% { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .hero__role {
+    color: var(--text-3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+  }
+
+  .hero__title {
+    font-size: var(--step-5);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    text-wrap: normal;
+    margin-top: 0.4rem;
+  }
+  .line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+  }
+  .line__inner {
+    display: block;
+  }
+  :global(html.js) .line__inner[data-hero-line] {
+    transform: translateY(118%);
+  }
+  .line:last-child .line__inner {
+    font-size: 1.02em;
+  }
+
+  .hero__lead {
+    max-width: 54ch;
+    font-size: var(--step-1);
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+  }
+
+  .hero__foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 7vh, 5rem);
+  }
+  .hero__based {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-3);
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+  }
+  .hero__pin {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .scroll-cue {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-3);
+  }
+  .scroll-cue__label {
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    opacity: 0.75;
+  }
+  .scroll-cue__line {
+    position: relative;
+    width: 1px;
+    height: 62px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .scroll-cue__line span {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 40%;
+    background: linear-gradient(to bottom, transparent, var(--text));
+    animation: cue 2.6s var(--ease-soft) infinite;
+  }
+  @keyframes cue {
+    0% { transform: translateY(-100%); }
+    60%, 100% { transform: translateY(250%); }
+  }
+
+  @media (max-width: 640px) {
+    .hero__foot {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+    .scroll-cue {
+      flex-direction: row;
+    }
+    .scroll-cue__label {
+      writing-mode: horizontal-tb;
+    }
+    .scroll-cue__line {
+      width: 62px;
+      height: 1px;
+    }
+    .scroll-cue__line span {
+      inset: 0 auto 0 0;
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(to right, transparent, var(--text));
+      animation: cue-x 2.6s var(--ease-soft) infinite;
+    }
+    @keyframes cue-x {
+      0% { transform: translateX(-100%); }
+      60%, 100% { transform: translateX(250%); }
+    }
+  }
+</style>

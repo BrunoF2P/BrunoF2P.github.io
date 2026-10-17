@@ -1,0 +1,26 @@
+---
+import Hero from '../components/Hero.astro';
+import Marquee from '../components/Marquee.astro';
+import About from '../components/About.astro';
+import Journey from '../components/Journey.astro';
+import Stack from '../components/Stack.astro';
+import Projects from '../components/Projects.astro';
+import OpenSource from '../components/OpenSource.astro';
+import Contact from '../components/Contact.astro';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<Hero lang={lang} />
+<Marquee lang={lang} />
+<About lang={lang} />
+<Journey lang={lang} />
+<Stack lang={lang} />
+<Marquee lang={lang} reverse />
+<Projects lang={lang} />
+<OpenSource lang={lang} />
+<Contact lang={lang} />

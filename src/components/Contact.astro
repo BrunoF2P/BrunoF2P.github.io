@@ -1,119 +1,190 @@
 ---
-import enMessages from '../messages/en.js';
-import ptMessages from '../messages/pt-br.js';
-import { Icon } from 'astro-icon/components'
+import { Icon } from 'astro-icon/components';
+import { site, socials } from '../data/site';
+import { ui, type Lang } from '../i18n/ui';
 
-const locale = Astro.url.pathname.startsWith("/pt-br") ? "pt-br" : "en";
-const messages = locale === 'pt-br' ? ptMessages : enMessages;
-const title = messages.contact.title;
-const description = messages.contact.description;
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+
+const words = t.contact.title.split(' ');
+const head = words.slice(0, -1).join(' ');
+const tail = words[words.length - 1];
 ---
 
-<div id="contact" class="contact-field">
-    <div class="detail-title">
-        <div class="cube"></div>
-        <h1 style="font-weight: bold;">{title}</h1>
+<section class="section contact" id="contact">
+  <div class="container contact__inner">
+    <span class="section-label" data-reveal>{t.contact.kicker}</span>
+
+    <h2 class="contact__title" data-reveal>
+      {head} <span class="serif gradient-text">{tail}</span>
+    </h2>
+
+    <p class="lead contact__lead" data-reveal>{t.contact.lead}</p>
+
+    <div class="contact__actions" data-reveal>
+      <button
+        class="btn btn--solid contact__mail"
+        type="button"
+        data-copy={site.email}
+        data-copy-done={t.contact.copied}
+        data-magnetic="8"
+      >
+        <Icon name="lucide:mail" class="icon" />
+        <span data-copy-label>{site.email}</span>
+        <Icon name="lucide:copy" class="contact__copy-icon" />
+      </button>
+
+      <a class="btn" href={`mailto:${site.email}`} data-magnetic="8">
+        <Icon name="lucide:send" class="icon" />
+        <span>{lang === 'en' ? 'Write me' : 'Me escreva'}</span>
+      </a>
     </div>
-    <p class="description">{description}</p>
-        <ul class="contact-info">
-            <li>
-                <Icon name="phone" aria-hidden="true" />
-                <span>(75) 9 9825-2863</span>
-            </li>
-            <li>
-                <Icon name="github" aria-hidden="true" />
-                <a href="https://github.com/BrunoF2P" target="_blank">github.com/BrunoF2P</a>
-            </li>
-            <li>
-                <Icon name="email" aria-hidden="true" />
-                <a href="mailto:brunobispo.saints@gmail.com">brunobispo.saints@gmail.com</a>
-            </li>
-            <li>
-                <Icon name="linkedin" aria-hidden="true" />
-                <a href="https://www.linkedin.com/in/brunof2p" target="_blank">linkedin.com/in/brunof2p</a>
-            </li>
-        </ul>
-</div>
+
+    <div class="contact__socials" data-reveal>
+      <span class="contact__or mono">{t.contact.or}</span>
+      <ul class="socials">
+        {socials.map((s) => (
+          <li>
+            <a class="social" href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} title={s.label}>
+              <Icon name={s.icon} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="contact__meta mono" data-reveal>
+      <span><Icon name="lucide:map-pin" /> {site.location}</span>
+      <span class="contact__clock"><Icon name="lucide:clock" /> <span data-clock>—</span> GMT-3</span>
+    </div>
+  </div>
+</section>
+
+<script>
+  const el = document.querySelector('[data-clock]');
+  if (el) {
+    const tick = () => {
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Bahia',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      el.textContent = fmt.format(now);
+    };
+    tick();
+    window.setInterval(tick, 20000);
+  }
+</script>
 
 <style>
-    [data-icon] {
-        font-size: 2rem;
-    }
-    .contact-field {
-        display: flex;
-        flex-direction: column;
-        margin-top: 8%;
-        align-items: center;
-        color: white;
-    }
-    .detail-title {
-        display: flex;
-        align-items: center;
-        gap: 25px; 
-    }
-    .cube {
-        width: 10px;
-        height: 10px;
-        background-color: #78d7d5;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;    
-    }
-    .cube::after {
-        content: "";
-        position: absolute;
-        inset: -5px;
-        border: 2px solid #78d7d5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+  .contact__inner {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+  }
+  .contact__title {
+    font-size: var(--step-4);
+    letter-spacing: -0.045em;
+    max-width: 20ch;
+    line-height: 1.02;
+    margin-top: 0.4rem;
+  }
+  .contact__title .serif {
+    font-size: 1.06em;
+  }
+  .contact__lead {
+    max-width: 52ch;
+    margin-top: 0;
+  }
+  .contact__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.7rem;
+    margin-top: 0.8rem;
+  }
+  .contact__mail {
+    font-size: var(--step-0);
+    padding: 0.9rem 1.5rem;
+  }
+  .contact__copy-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    opacity: 0.7;
+    margin-left: 0.15rem;
+  }
 
-    .description {
-        padding: 1.5rem;
-        font-size: 1.2rem;
-        color: #bbb;
-    }
+  .contact__socials {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    margin-top: 1.6rem;
+  }
+  .contact__or {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .socials {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .social {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--glass);
+    color: var(--text-2);
+    transition: transform 0.4s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease), background 0.35s var(--ease);
+  }
+  .social:hover {
+    transform: translateY(-3px);
+    color: var(--text);
+    border-color: var(--ring);
+    background: var(--elev);
+  }
+  .social :global(svg) {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 
-    .contact-info {
-        list-style: none;
-        margin-top: 4%;
-        padding: 0;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 5rem 30rem;
-        text-align: center;
-    }
-
-
-    .contact-info li {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1.2rem;
-    }
-
-    .contact-info a {
-        color: white;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .contact-info a:hover {
-        color: #78d7d5;
-        text-decoration: underline;
-    }
-
-    @media screen and (max-width: 768px) {
-        .description {
-            font-size: 1.2rem;
-            color: #bbb;
-            text-align: center;
-        }
-        .contact-info {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-    }
+  .contact__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.6rem;
+    margin-top: 1.8rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--line-soft);
+    width: 100%;
+    font-size: 0.78rem;
+    color: var(--text-3);
+  }
+  .contact__meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .contact__meta :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  .contact__clock span[data-clock] {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-2);
+  }
 </style>

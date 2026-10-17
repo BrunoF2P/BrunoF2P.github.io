@@ -1,0 +1,60 @@
+---
+import { Icon } from 'astro-icon/components';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  reverse?: boolean;
+}
+const { lang, reverse = false } = Astro.props;
+const items = [...ui[lang].marquee, ...ui[lang].marquee, ...ui[lang].marquee];
+---
+
+<div class={`marquee ${reverse ? 'marquee--reverse' : ''}`} aria-hidden="true">
+  <div class="marquee__track">
+    {items.map((item, i) => (
+      <span class="marquee__item">
+        <span class={i % 2 === 0 ? 'marquee__word' : 'marquee__word marquee__word--outline'}>{item}</span>
+        <Icon name="lucide:asterisk" class="marquee__sep" />
+      </span>
+    ))}
+  </div>
+  <div class="marquee__track">
+    {items.map((item, i) => (
+      <span class="marquee__item">
+        <span class={i % 2 === 0 ? 'marquee__word' : 'marquee__word marquee__word--outline'}>{item}</span>
+        <Icon name="lucide:asterisk" class="marquee__sep" />
+      </span>
+    ))}
+  </div>
+</div>
+
+<style>
+  .marquee {
+    padding-block: clamp(0.5rem, 2vw, 1.4rem);
+    border-block: 1px solid var(--line-soft);
+  }
+  .marquee__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2.5rem;
+  }
+  .marquee__word {
+    font-size: var(--step-3);
+    font-weight: 750;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .marquee__word--outline {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--text-3);
+  }
+  .marquee__sep {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+</style>

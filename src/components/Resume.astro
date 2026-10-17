@@ -1,0 +1,479 @@
+---
+import { Icon } from 'astro-icon/components';
+import { site, socials } from '../data/site';
+import { timeline } from '../data/experience';
+import { stack } from '../data/stack';
+import { featuredProjects } from '../data/projects';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const r = t.resumePage;
+const en = lang === 'en';
+
+const summary = en
+  ? 'Software Engineering student at UNEB with hands-on experience across the stack: high-performance Rust components, Tauri desktop applications, Spring Boot and Go backends, and data work in Python and R. I treat side projects as products — documented, benchmarked and shipped — and my final thesis researches generational references for memory safety in compilers.'
+  : 'Estudante de Engenharia de Software na UNEB com prática em toda a stack: componentes Rust de alta performance, aplicações desktop em Tauri, backends Spring Boot e Go, e análise de dados em Python e R. Trato projetos pessoais como produtos — documentados, medidos e entregues — e meu TCC pesquisa referências geracionais para segurança de memória em compiladores.';
+
+const education = timeline.filter((i) => i.kind === 'education');
+const experience = timeline.filter((i) => i.kind === 'experience');
+const courses = timeline.filter((i) => i.kind === 'course');
+const milestones = timeline.filter((i) => i.kind === 'milestone');
+
+const contacts: Array<{ icon: string; label: string; href?: string }> = [
+  { icon: 'lucide:mail', label: site.email, href: `mailto:${site.email}` },
+  { icon: 'lucide:phone', label: site.phone, href: `tel:${site.phone.replace(/\D/g, '')}` },
+  { icon: 'lucide:map-pin', label: site.location },
+  { icon: 'simple-icons:github', label: 'github.com/BrunoF2P', href: site.github },
+  { icon: 'simple-icons:linkedin', label: 'linkedin.com/in/brunof2p', href: site.linkedin },
+];
+---
+
+<article class="resume">
+  <div class="container">
+    <div class="resume__bar" data-reveal>
+      <a class="resume__back" href={`/${lang}/`}>
+        <Icon name="lucide:arrow-left" />
+        <span>{en ? 'Back to portfolio' : 'Voltar ao portfólio'}</span>
+      </a>
+      <div class="resume__bar-actions">
+        <a class="btn btn--solid" href={en ? site.resumeEn : site.resume} download>
+          <Icon name="lucide:download" class="icon" />
+          <span>{r.download}</span>
+        </a>
+        <button class="btn" type="button" id="print-btn">
+          <Icon name="lucide:printer" class="icon" />
+          <span>{r.print}</span>
+        </button>
+      </div>
+    </div>
+
+    <header class="resume__head">
+      <div>
+        <h1 class="resume__name">{site.fullName}</h1>
+        <p class="resume__role">{en ? 'Software Engineering Student' : 'Estudante de Engenharia de Software'} · UNEB</p>
+      </div>
+      <ul class="resume__contacts">
+        {contacts.map((c) => (
+          <li>
+            {c.href ? (
+              <a href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
+                <Icon name={c.icon} />
+                <span>{c.label}</span>
+              </a>
+            ) : (
+              <span>
+                <Icon name={c.icon} />
+                <span>{c.label}</span>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </header>
+
+    <div class="resume__body">
+      <div class="resume__main">
+        <section class="rblock">
+          <h2 class="rblock__title">{r.summary}</h2>
+          <p class="rblock__text">{summary}</p>
+        </section>
+
+        <section class="rblock">
+          <h2 class="rblock__title">{r.experience}</h2>
+          {experience.map((item) => (
+            <div class="rentry">
+              <div class="rentry__head">
+                <h3>{item.title[lang]}</h3>
+                <span class="mono">{item.period[lang]}</span>
+              </div>
+              <p class="rentry__org">{item.org[lang]}</p>
+              <p class="rentry__desc">{item.desc[lang]}</p>
+            </div>
+          ))}
+          {milestones.map((item) => (
+            <div class="rentry">
+              <div class="rentry__head">
+                <h3>{item.title[lang]}</h3>
+                <span class="mono">{item.period[lang]}</span>
+              </div>
+              <p class="rentry__org">{item.org[lang]}</p>
+              <p class="rentry__desc">{item.desc[lang]}</p>
+            </div>
+          ))}
+        </section>
+
+        <section class="rblock">
+          <h2 class="rblock__title">{r.projects}</h2>
+          {featuredProjects.map((p) => (
+            <div class="rentry rentry--project">
+              <div class="rentry__head">
+                <h3>{p.title}</h3>
+                <span class="mono">{p.stack.slice(0, 4).join(' · ')}</span>
+              </div>
+              <p class="rentry__desc">{p.tagline[lang]} — {p.summary[lang]}</p>
+            </div>
+          ))}
+        </section>
+      </div>
+
+      <aside class="resume__aside">
+        <section class="rblock">
+          <h2 class="rblock__title">{r.education}</h2>
+          {education.map((item) => (
+            <div class="rentry">
+              <div class="rentry__head">
+                <h3>{item.title[lang]}</h3>
+              </div>
+              <p class="rentry__org">{item.org[lang]}</p>
+              <p class="rentry__desc">{item.period[lang]}</p>
+            </div>
+          ))}
+        </section>
+
+        <section class="rblock">
+          <h2 class="rblock__title">{r.skills}</h2>
+          <ul class="rskills">
+            {stack.map((group) => (
+              <li>
+                <span class="rskills__label">{t.stack.groups[group.id]}</span>
+                <span class="rskills__items">{group.items.map((i) => i.name).join(' · ')}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section class="rblock">
+          <h2 class="rblock__title">{r.courses}</h2>
+          {courses.map((item) => (
+            <div class="rentry rentry--compact">
+              <div class="rentry__head">
+                <h3>{item.title[lang]}</h3>
+                <span class="mono">{item.period[lang]}</span>
+              </div>
+              <p class="rentry__org">{item.org[lang]}</p>
+            </div>
+          ))}
+        </section>
+
+        <section class="rblock">
+          <h2 class="rblock__title">{r.languages}</h2>
+          <ul class="rlangs">
+            <li><span>{en ? 'Portuguese' : 'Português'}</span><span class="mono">{en ? 'Native' : 'Nativo'}</span></li>
+            <li><span>{en ? 'English' : 'Inglês'}</span><span class="mono">{en ? 'Technical reading' : 'Leitura técnica'}</span></li>
+          </ul>
+        </section>
+
+        <section class="rblock">
+          <h2 class="rblock__title">{r.contact}</h2>
+          <ul class="rcontact">
+            {socials.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener noreferrer"><Icon name={s.icon} />{s.label}</a></li>
+            ))}
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+</article>
+
+<script>
+  document.getElementById('print-btn')?.addEventListener('click', () => window.print());
+</script>
+
+<style>
+  .resume {
+    padding-top: clamp(6rem, 12vh, 8rem);
+    padding-bottom: 4rem;
+  }
+  .resume__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: clamp(2rem, 5vw, 3rem);
+  }
+  .resume__bar-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .resume__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: var(--step--1);
+    color: var(--text-2);
+    transition: color 0.3s var(--ease);
+  }
+  .resume__back:hover {
+    color: var(--text);
+  }
+  .resume__back :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .resume__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem 3rem;
+    align-items: end;
+    padding-bottom: 1.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .resume__name {
+    font-size: var(--step-4);
+    letter-spacing: -0.045em;
+  }
+  .resume__role {
+    margin-top: 0.6rem;
+    color: var(--text-2);
+    font-size: var(--step-1);
+  }
+  .resume__contacts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+    font-size: var(--step--1);
+  }
+  .resume__contacts a,
+  .resume__contacts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-2);
+    transition: color 0.3s var(--ease);
+  }
+  .resume__contacts a:hover {
+    color: var(--text);
+  }
+  .resume__contacts :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+
+  .resume__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    padding-top: clamp(1.6rem, 4vw, 2.6rem);
+  }
+  .resume__main,
+  .resume__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 2.4rem;
+  }
+
+  .rblock__title {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  .rblock__text {
+    color: var(--text-2);
+    font-size: var(--step-0);
+    line-height: 1.65;
+    max-width: 70ch;
+  }
+
+  .rentry {
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.1rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .rentry:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .rentry--compact {
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.7rem;
+  }
+  .rentry__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.15rem 1rem;
+  }
+  .rentry__head h3 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .rentry__head .mono {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .rentry__head h3 {
+    font-size: var(--step-1);
+    letter-spacing: -0.02em;
+  }
+  .rentry__head .mono {
+    font-size: 0.72rem;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+  .rentry__org {
+    margin-top: 0.25rem;
+    font-size: var(--step--1);
+    color: var(--accent);
+    font-weight: 550;
+  }
+  .rentry__desc {
+    margin-top: 0.5rem;
+    font-size: var(--step--1);
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  .rskills {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .rskills__label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+    margin-bottom: 0.2rem;
+  }
+  .rskills__items {
+    font-size: var(--step--1);
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+
+  .rlangs,
+  .rcontact {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: var(--step--1);
+  }
+  .rlangs li {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-2);
+  }
+  .rlangs .mono {
+    color: var(--text-3);
+    font-size: 0.72rem;
+  }
+  .rcontact a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-2);
+    transition: color 0.3s var(--ease);
+  }
+  .rcontact a:hover {
+    color: var(--text);
+  }
+  .rcontact :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--text-3);
+  }
+
+  @media (max-width: 900px) {
+    .resume__head {
+      grid-template-columns: 1fr;
+    }
+    .resume__body {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media print {
+    @page {
+      size: A4;
+      margin: 12mm 12mm 14mm;
+    }
+    .resume {
+      padding-top: 0;
+    }
+    .container {
+      max-width: none;
+      padding-inline: 0;
+    }
+    .resume__body {
+      grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+      gap: 2.4rem;
+    }
+    .rblock__text {
+      max-width: none;
+    }
+    .skip-link {
+      display: none !important;
+    }
+    .resume__head {
+      padding-bottom: 1.2rem;
+    }
+    .resume__body {
+      padding-top: 1.2rem;
+    }
+    .resume__main,
+    .resume__aside {
+      gap: 1.5rem;
+    }
+    .rblock__title {
+      margin-bottom: 0.65rem;
+    }
+    .rentry {
+      padding-bottom: 0.7rem;
+      margin-bottom: 0.7rem;
+    }
+    .rentry__desc,
+    .rblock__text {
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+    .rskills {
+      gap: 0.5rem;
+    }
+    .resume__bar {
+      display: none;
+    }
+    .resume__name {
+      font-size: 2.4rem;
+    }
+    .rblock__title {
+      color: #0a5fc4;
+    }
+    .rentry__org {
+      color: #333;
+    }
+    .rentry__desc,
+    .rblock__text,
+    .resume__role,
+    .resume__contacts a,
+    .resume__contacts span,
+    .rskills__items,
+    .rlangs li,
+    .rcontact a {
+      color: #222;
+    }
+  }
+</style>
