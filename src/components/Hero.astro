@@ -229,13 +229,45 @@ const home = `${base}/${lang}/`;
   }
 
   @media (max-width: 640px) {
+    .hero__lead {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+    .hero__cta {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .hero__cta .btn {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 0.65rem 0.65rem;
+      font-size: 0.84rem;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .hero__cta .btn .icon {
+      width: 0.9rem;
+      height: 0.9rem;
+      flex-shrink: 0;
+    }
     .hero__foot {
       flex-direction: column;
-      align-items: flex-start;
-      gap: 1.5rem;
+      align-items: center;
+      gap: 1.25rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .hero__based {
+      justify-content: center;
     }
     .scroll-cue {
       flex-direction: row;
+      justify-content: center;
     }
     .scroll-cue__label {
       writing-mode: horizontal-tb;

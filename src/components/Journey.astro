@@ -224,4 +224,14 @@ const items = [...timeline].sort((a, b) => b.from.localeCompare(a.from));
       position: static;
     }
   }
+
+  @media (max-width: 640px) {
+    .timeline__desc,
+    .timeline__responsibilities li {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+  }
 </style>

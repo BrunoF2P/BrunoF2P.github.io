@@ -90,20 +90,23 @@ const t = ui[lang];
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
     gap: 0.55rem;
   }
   .tech {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.42rem 0.85rem 0.42rem 0.5rem;
+    padding: 0.45rem 0.75rem 0.45rem 0.5rem;
     border-radius: var(--radius-xs);
     border: 1px solid var(--line);
     background: color-mix(in srgb, var(--glass) 100%, transparent);
     font-size: var(--step--1);
     color: var(--text-2);
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     transition: color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.35s var(--ease),
       box-shadow 0.35s var(--ease);
   }
@@ -120,6 +123,7 @@ const t = ui[lang];
     height: 1.9rem;
     border-radius: 50%;
     background: color-mix(in srgb, var(--hue) 16%, transparent);
+    flex-shrink: 0;
     transition: background 0.35s var(--ease), transform 0.35s var(--ease);
   }
   .tech:hover .tech__icon {
@@ -131,6 +135,8 @@ const t = ui[lang];
     height: 1.15rem;
   }
   .tech__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -141,6 +147,25 @@ const t = ui[lang];
     .bento__card,
     .bento__card--wide {
       grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .bento__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .tech {
+      padding: 0.4rem 0.55rem 0.4rem 0.45rem;
+      font-size: 0.8rem;
+    }
+    .tech__icon {
+      width: 1.7rem;
+      height: 1.7rem;
+    }
+    .tech__icon :global(svg) {
+      width: 1rem;
+      height: 1rem;
     }
   }
 </style>

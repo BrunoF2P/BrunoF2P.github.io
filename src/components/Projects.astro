@@ -922,6 +922,25 @@ const ordinal = (n: number) => String(n).padStart(2, '0');
   @media (max-width: 720px) {
     .projects__controls {
       position: static;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.35rem;
+      width: 100%;
+    }
+    .filter {
+      justify-content: center;
+      width: 100%;
+      padding: 0.4rem 0.55rem;
+      font-size: 0.8rem;
+    }
+    .projects__showing {
+      text-align: center;
+      padding-right: 0;
     }
     .projects__grid {
       grid-template-columns: 1fr;
@@ -936,6 +955,41 @@ const ordinal = (n: number) => String(n).padStart(2, '0');
     .tile--wide .tile__media {
       aspect-ratio: 16 / 10;
       min-height: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .scene__desc,
+    .scene__highlights li,
+    .tile__tagline {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+    .scene__links {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .scene__links .btn {
+      flex: 1 1 0;
+      padding: 0.55rem 0.65rem;
+      font-size: 0.82rem;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    .projects__cta {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.2rem;
+    }
+    .projects__cta-text {
+      justify-items: center;
+    }
+    .projects__cta-title {
+      text-align: center;
     }
   }
   @media (min-width: 1500px) {

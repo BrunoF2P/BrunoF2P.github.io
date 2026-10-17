@@ -230,4 +230,26 @@ const repos = [
       display: none;
     }
   }
+
+  @media (max-width: 640px) {
+    .opensource__intro {
+      text-align: center;
+    }
+    .opensource__cta {
+      margin-inline: auto;
+    }
+    .repo:not(.repo--spotlight) {
+      flex-wrap: wrap;
+      gap: 0.4rem 0.6rem;
+    }
+    .repo:not(.repo--spotlight) .repo__name {
+      white-space: normal;
+      word-break: break-word;
+      font-size: 0.95rem;
+    }
+    .repo--spotlight .repo__foot {
+      flex-wrap: wrap;
+      margin-right: 0;
+    }
+  }
 </style>

@@ -202,11 +202,25 @@ const paragraphs = [t.about.p1, t.about.p2, t.about.p3];
     }
     .about__aside {
       position: static;
-      max-width: 420px;
+      max-width: 360px;
+      margin-inline: auto;
+      width: 100%;
     }
     .about__stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1.4rem 1rem;
+    }
+    .about__stat {
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .about__text p {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: auto;
+      -webkit-hyphens: auto;
     }
   }
 
