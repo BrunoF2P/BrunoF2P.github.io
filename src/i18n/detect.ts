@@ -1,5 +1,10 @@
 import { defaultLang, languages, type Lang } from './ui';
 
+/**
+ * Resolução de idioma isomórfica: roda no servidor (header Accept-Language) ou no
+ * cliente (navigator.languages, que tem o mesmo formato de lista).
+ */
+
 /** Escolhe o idioma a partir do header Accept-Language do navegador. */
 export function detectLanguage(header: string | null): Lang {
   if (!header) return defaultLang;

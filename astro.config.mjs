@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 import icon from 'astro-icon';
 
-import vercel from '@astrojs/vercel';
 // https://astro.build/config
 export default defineConfig({
   integrations: [
@@ -84,9 +83,13 @@ export default defineConfig({
     defaultLocale: 'en',
     routing: {
       prefixDefaultLocale: true,
+      // A rota `/` é nossa: ela resolve o idioma e redireciona (ver src/pages/index.astro).
+      redirectToDefaultLocale: false,
     },
   },
 
-  output: 'server',
-  adapter: vercel(),
+  // 'true' mantém a regra do HTML (um espaço preservado entre elementos inline).
+  // O padrão do Astro 7 ('jsx') remove ~475 espaços por página: economiza apenas
+  // ~158 bytes após gzip, mas exigiria auditar {" "} em todo o texto inline.
+  compressHTML: true,
 });
